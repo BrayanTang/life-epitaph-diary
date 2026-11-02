@@ -56,6 +56,7 @@ dotnet run --project src/LifeEpitaph.Api --launch-profile http
 | GET/PUT | `/answers` · `/answers/today` | 短答读写（Bearer `anon.{userId:N}`） |
 | GET | `/tombstone/me` | 当前用户墓碑 |
 | GET | `/plaza` | 广场 mock 卡片（含近章标题） |
+| POST | `/plaza/{tombstoneId}/flowers` | 献花（计数 +1） |
 | POST | `/chapters/generate` | Mock 周章节生成 |
 
 ## 运行 MAUI（Windows）

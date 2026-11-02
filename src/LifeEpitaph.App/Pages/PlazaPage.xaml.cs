@@ -17,6 +17,11 @@ public partial class PlazaPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
         PlazaList.Children.Clear();
 
         var cards = await _api.GetPlazaAsync();
@@ -26,6 +31,7 @@ public partial class PlazaPage : ContentPage
             [
                 new PlazaCardDto
                 {
+                    TombstoneId = Guid.Parse("11111111-1111-4111-8111-111111111111"),
                     DisplayName = "雾里的猫",
                     Epitaph = "路过人间，轻轻放下一束花。",
                     Status = "发呆",
@@ -37,50 +43,83 @@ public partial class PlazaPage : ContentPage
         }
 
         foreach (var card in cards)
-        {
-            var titles = card.RecentChapterTitles.Count == 0
-                ? "（暂无近章）"
-                : string.Join(" · ", card.RecentChapterTitles);
+            PlazaList.Children.Add(BuildCard(card));
+    }
 
-            PlazaList.Children.Add(new Border
+    private View BuildCard(PlazaCardDto card)
+    {
+        var titles = card.RecentChapterTitles.Count == 0
+            ? "（暂无近章）"
+            : string.Join(" · ", card.RecentChapterTitles);
+
+        var flowerLabel = new Label
+        {
+            Text = $"皮肤 {card.SkinId} · 献花 {card.FlowerCount}",
+            FontSize = 12,
+            TextColor = (Color)Application.Current!.Resources["MutedInk"],
+        };
+
+        var flowerButton = new Button
+        {
+            Text = "献一束花",
+            Style = (Style)Application.Current.Resources["QuietButton"],
+            HorizontalOptions = LayoutOptions.Start,
+            Padding = new Thickness(14, 8),
+            FontSize = 13,
+        };
+
+        flowerButton.Clicked += async (_, _) =>
+        {
+            flowerButton.IsEnabled = false;
+            try
             {
-                StrokeThickness = 0,
-                BackgroundColor = (Color)Application.Current!.Resources["StoneSurface"],
-                StrokeShape = new RoundRectangle { CornerRadius = 14 },
-                Padding = new Thickness(18),
-                Content = new VerticalStackLayout
+                var updated = await _api.OfferFlowerAsync(card.TombstoneId);
+                card.FlowerCount = updated.FlowerCount;
+                flowerLabel.Text = $"皮肤 {card.SkinId} · 献花 {card.FlowerCount}";
+                flowerButton.Text = "已献花";
+                await Task.Delay(600);
+                flowerButton.Text = "再献一束";
+            }
+            finally
+            {
+                flowerButton.IsEnabled = true;
+            }
+        };
+
+        return new Border
+        {
+            StrokeThickness = 0,
+            BackgroundColor = (Color)Application.Current.Resources["StoneSurface"],
+            StrokeShape = new RoundRectangle { CornerRadius = 14 },
+            Padding = new Thickness(18),
+            Content = new VerticalStackLayout
+            {
+                Spacing = 8,
+                Children =
                 {
-                    Spacing = 6,
-                    Children =
+                    new Label
                     {
-                        new Label
-                        {
-                            Text = $"{card.DisplayName}  ·  {card.Status}",
-                            FontSize = 16,
-                            FontAttributes = FontAttributes.Bold,
-                            TextColor = (Color)Application.Current.Resources["SoftInk"],
-                        },
-                        new Label
-                        {
-                            Text = $"「{card.Epitaph}」",
-                            FontSize = 14,
-                            TextColor = (Color)Application.Current.Resources["SoftInk"],
-                        },
-                        new Label
-                        {
-                            Text = $"皮肤 {card.SkinId} · 献花 {card.FlowerCount}",
-                            FontSize = 12,
-                            TextColor = (Color)Application.Current.Resources["MutedInk"],
-                        },
-                        new Label
-                        {
-                            Text = $"近章：{titles}",
-                            FontSize = 12,
-                            TextColor = (Color)Application.Current.Resources["MutedInk"],
-                        },
+                        Text = $"{card.DisplayName}  ·  {card.Status}",
+                        FontSize = 16,
+                        FontAttributes = FontAttributes.Bold,
+                        TextColor = (Color)Application.Current.Resources["SoftInk"],
                     },
+                    new Label
+                    {
+                        Text = $"「{card.Epitaph}」",
+                        FontSize = 14,
+                        TextColor = (Color)Application.Current.Resources["SoftInk"],
+                    },
+                    flowerLabel,
+                    new Label
+                    {
+                        Text = $"近章：{titles}",
+                        FontSize = 12,
+                        TextColor = (Color)Application.Current.Resources["MutedInk"],
+                    },
+                    flowerButton,
                 },
-            });
-        }
+            },
+        };
     }
 }

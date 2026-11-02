@@ -55,6 +55,16 @@ public sealed class ApiClient
         }
     }
 
+    public async Task<PlazaCardDto> OfferFlowerAsync(Guid tombstoneId)
+    {
+        var response = await _http.PostAsync($"plaza/{tombstoneId:D}/flowers", content: null);
+        response.EnsureSuccessStatusCode();
+        var card = await response.Content.ReadFromJsonAsync<PlazaCardDto>(JsonOptions);
+        if (card is null)
+            throw new InvalidOperationException("献花响应为空");
+        return card;
+    }
+
     private async Task EnsureAuthHeaderAsync()
     {
         var session = _session.Current ?? await _session.EnsureSessionAsync();

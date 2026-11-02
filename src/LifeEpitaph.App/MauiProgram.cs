@@ -25,6 +25,7 @@ public static class MauiProgram
         builder.Services.AddTransient<TombstoneHomePage>();
         builder.Services.AddTransient<DailyPromptPage>();
         builder.Services.AddTransient<ChaptersPage>();
+        builder.Services.AddTransient<ChapterDetailPage>();
         builder.Services.AddTransient<PlazaPage>();
         builder.Services.AddTransient<ProfilePage>();
 

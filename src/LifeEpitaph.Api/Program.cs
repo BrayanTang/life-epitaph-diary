@@ -88,6 +88,12 @@ app.MapGet("/tombstone/me", (HttpRequest http, InMemoryAppStore store) =>
 
 app.MapGet("/plaza", () => Results.Ok(InMemoryAppStore.MockPlazaCards()));
 
+app.MapPost("/plaza/{tombstoneId:guid}/flowers", (Guid tombstoneId) =>
+{
+    var card = InMemoryAppStore.OfferFlower(tombstoneId);
+    return card is null ? Results.NotFound() : Results.Ok(card);
+});
+
 app.MapPost("/chapters/generate", async (
     HttpRequest http,
     InMemoryAppStore store,
