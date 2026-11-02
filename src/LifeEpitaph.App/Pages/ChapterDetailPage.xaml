@@ -8,14 +8,14 @@
     <ScrollView>
         <VerticalStackLayout Padding="28,36" Spacing="16">
 
-            <Button Text="← 返回剧情列表"
+            <Button Text="← 返回"
                     BackgroundColor="Transparent"
                     TextColor="{StaticResource AccentMoss}"
                     HorizontalOptions="Start"
                     Padding="0"
                     Clicked="OnBackClicked" />
 
-            <Label x:Name="TitleLabel" Style="{StaticResource BrandTitle}" />
+            <Label x:Name="TitleLabel" Style="{StaticResource BrandTitle}" FontSize="26" />
             <Label x:Name="MetaLabel" Style="{StaticResource SoftSubtitle}" />
 
             <Border StrokeThickness="0"
@@ -24,18 +24,23 @@
                     Padding="20">
                 <Label x:Name="StoryLabel"
                        FontSize="16"
-                       LineHeight="1.45"
+                       LineHeight="1.5"
                        TextColor="{StaticResource SoftInk}" />
             </Border>
+
+            <Button x:Name="ShareButton"
+                    Text="分享这一章到广场"
+                    Style="{StaticResource QuietButton}"
+                    Clicked="OnShareClicked" />
 
             <Label Text="丰富这段故事"
                    Style="{StaticResource SectionLabel}"
                    Margin="0,8,0,0" />
-            <Label Text="把平淡的一天写成一场温柔的冒险——比如通勤路上的风车大战。"
+            <Label Text="把通勤、钥匙、晚饭写成风车大战——添一笔你自己的夸张。"
                    Style="{StaticResource SoftSubtitle}" />
 
             <Editor x:Name="EnrichEditor"
-                    Placeholder="写下你想添上的一笔…"
+                    Placeholder="比如：其实那扇地铁门，是龙的眼皮…"
                     AutoSize="TextChanges"
                     MinimumHeightRequest="140"
                     BackgroundColor="{StaticResource EditorSurface}"

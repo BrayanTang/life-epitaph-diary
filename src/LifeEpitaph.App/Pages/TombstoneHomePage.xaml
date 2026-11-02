@@ -6,64 +6,127 @@
              BackgroundColor="{StaticResource PageBackground}">
 
     <ScrollView>
-        <VerticalStackLayout Padding="28,36" Spacing="28">
+        <VerticalStackLayout Padding="28,36" Spacing="22">
 
-            <VerticalStackLayout Spacing="6">
-                <Label Text="人生墓碑日记"
-                       Style="{StaticResource BrandTitle}" />
-                <Label Text="安静地留下这一周的自己"
+            <VerticalStackLayout Spacing="4">
+                <Label Text="人生墓碑日记" Style="{StaticResource BrandTitle}" />
+                <Label Text="把平凡的一天，写成一场温柔的冒险"
                        Style="{StaticResource SoftSubtitle}" />
             </VerticalStackLayout>
 
-            <BoxView HeightRequest="1" Color="{StaticResource Hairline}" />
+            <Border StrokeThickness="0"
+                    BackgroundColor="{StaticResource StoneSurface}"
+                    StrokeShape="RoundRectangle 24"
+                    Padding="28,32"
+                    Margin="8,4">
+                <VerticalStackLayout Spacing="14" HorizontalOptions="Fill">
+                    <BoxView HeightRequest="6"
+                             WidthRequest="72"
+                             Color="{StaticResource AccentMoss}"
+                             HorizontalOptions="Center"
+                             CornerRadius="3"
+                             Opacity="0.55" />
+                    <Label Text="∩"
+                           FontSize="28"
+                           HorizontalTextAlignment="Center"
+                           TextColor="{StaticResource AccentMoss}"
+                           Opacity="0.7" />
+                    <Label x:Name="DisplayNameLabel"
+                           Text="无名之石"
+                           FontSize="24"
+                           FontAttributes="Bold"
+                           HorizontalTextAlignment="Center"
+                           TextColor="{StaticResource SoftInk}" />
+                    <Label x:Name="StatusLabel"
+                           Text="状态 · 安静"
+                           FontSize="14"
+                           HorizontalTextAlignment="Center"
+                           TextColor="{StaticResource MutedInk}" />
+                    <BoxView HeightRequest="1"
+                             Color="{StaticResource Hairline}"
+                             Margin="24,4" />
+                    <Label x:Name="EpitaphLabel"
+                           Text="墓志铭"
+                           Style="{StaticResource EpitaphText}"
+                           HorizontalTextAlignment="Center"
+                           Margin="8,0" />
+                    <Label x:Name="SkinLabel"
+                           Text=""
+                           FontSize="12"
+                           HorizontalTextAlignment="Center"
+                           TextColor="{StaticResource MutedInk}"
+                           Opacity="0.85" />
+                </VerticalStackLayout>
+            </Border>
 
-            <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
-                <Border StrokeThickness="0"
-                        BackgroundColor="{StaticResource StoneSurface}"
-                        WidthRequest="200"
-                        HeightRequest="240"
-                        StrokeShape="RoundRectangle 20"
-                        Padding="20">
-                    <VerticalStackLayout VerticalOptions="Center" Spacing="10">
-                        <BoxView HeightRequest="8"
-                                 WidthRequest="56"
-                                 Color="{StaticResource Hairline}"
-                                 HorizontalOptions="Center"
-                                 CornerRadius="4" />
-                        <Label x:Name="DisplayNameLabel"
-                               Text="无名之石"
-                               FontSize="20"
-                               FontAttributes="Bold"
-                               HorizontalTextAlignment="Center"
-                               TextColor="{StaticResource SoftInk}" />
-                        <Label x:Name="StatusLabel"
-                               Text="状态 · 安静"
-                               FontSize="13"
-                               HorizontalTextAlignment="Center"
-                               TextColor="{StaticResource MutedInk}" />
-                        <Label x:Name="SkinLabel"
-                               Text="皮肤 soft-stone"
-                               FontSize="12"
-                               HorizontalTextAlignment="Center"
-                               TextColor="{StaticResource MutedInk}" />
-                    </VerticalStackLayout>
-                </Border>
+            <Border x:Name="SetupPanel"
+                    IsVisible="False"
+                    StrokeThickness="0"
+                    BackgroundColor="{StaticResource EditorSurface}"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="18">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="先立一块自己的石头"
+                           Style="{StaticResource SectionLabel}" />
+                    <Label Text="墓名、墓志铭、此刻状态——都可以改，只有你自己先看见。"
+                           Style="{StaticResource SoftSubtitle}" />
+                    <Entry x:Name="NameEntry"
+                           Placeholder="墓名，比如：南风石"
+                           TextColor="{StaticResource SoftInk}"
+                           PlaceholderColor="{StaticResource MutedInk}" />
+                    <Entry x:Name="EpitaphEntry"
+                           Placeholder="墓志铭，一句就好"
+                           TextColor="{StaticResource SoftInk}"
+                           PlaceholderColor="{StaticResource MutedInk}" />
+                    <Entry x:Name="StatusEntry"
+                           Placeholder="状态，比如：安静 / 发呆 / 想说话"
+                           TextColor="{StaticResource SoftInk}"
+                           PlaceholderColor="{StaticResource MutedInk}" />
+                    <Button Text="立好了"
+                            Style="{StaticResource QuietButton}"
+                            Clicked="OnSaveSetupClicked" />
+                </VerticalStackLayout>
+            </Border>
 
-                <Label x:Name="EpitaphLabel"
-                       Text="墓志铭"
-                       Style="{StaticResource EpitaphText}"
-                       HorizontalTextAlignment="Center"
-                       Margin="12,8,12,0" />
-            </VerticalStackLayout>
+            <Border StrokeThickness="0"
+                    BackgroundColor="{StaticResource StoneSurface}"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="18">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="今日提问" Style="{StaticResource SectionLabel}" />
+                    <Label x:Name="TodayPromptLabel"
+                           Text="加载中…"
+                           FontSize="15"
+                           LineHeight="1.35"
+                           TextColor="{StaticResource SoftInk}" />
+                    <Button Text="去回答"
+                            Style="{StaticResource QuietButton}"
+                            Clicked="OnGoDailyPrompt" />
+                </VerticalStackLayout>
+            </Border>
 
             <VerticalStackLayout Spacing="8">
-                <Label Text="近期章节" Style="{StaticResource SectionLabel}" />
-                <VerticalStackLayout x:Name="ChaptersPreview" Spacing="6" />
+                <Label Text="近期人生剧情" Style="{StaticResource SectionLabel}" />
+                <VerticalStackLayout x:Name="ChaptersPreview" Spacing="8" />
+                <Button Text="查看全部剧情"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource AccentMoss}"
+                        Clicked="OnGoChapters" />
             </VerticalStackLayout>
 
-            <Button Text="去写今日提问"
-                    Style="{StaticResource QuietButton}"
-                    Clicked="OnGoDailyPrompt" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Button Grid.Column="0"
+                        Text="写自由日志"
+                        Style="{StaticResource QuietButton}"
+                        Clicked="OnGoProfile" />
+                <Button Grid.Column="1"
+                        Text="去广场看看"
+                        BackgroundColor="{StaticResource StoneSurface}"
+                        TextColor="{StaticResource SoftInk}"
+                        CornerRadius="12"
+                        Padding="18,12"
+                        Clicked="OnGoPlaza" />
+            </Grid>
 
         </VerticalStackLayout>
     </ScrollView>

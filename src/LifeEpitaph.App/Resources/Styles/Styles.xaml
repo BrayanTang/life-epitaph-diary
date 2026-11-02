@@ -425,8 +425,9 @@
 
     <Style x:Key="BrandTitle" TargetType="Label">
         <Setter Property="FontFamily" Value="OpenSansSemibold" />
-        <Setter Property="FontSize" Value="28" />
+        <Setter Property="FontSize" Value="30" />
         <Setter Property="TextColor" Value="{StaticResource SoftInk}" />
+        <Setter Property="CharacterSpacing" Value="0.5" />
     </Style>
 
     <Style x:Key="SoftSubtitle" TargetType="Label">

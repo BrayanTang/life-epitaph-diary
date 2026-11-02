@@ -1,6 +1,7 @@
 using LifeEpitaph.App.Models;
 using LifeEpitaph.App.Services;
 using LifeEpitaph.Shared.Models;
+using Microsoft.Maui.Controls.Shapes;
 
 namespace LifeEpitaph.App.Pages;
 
@@ -30,16 +31,54 @@ public partial class DailyPromptPage : ContentPage
         _suppressTextChanged = true;
         AnswerEditor.Text = existing?.Body ?? string.Empty;
         _suppressTextChanged = false;
-        SaveHintLabel.Text = existing is null ? "" : $"已保存 · {existing.UpdatedAt}";
+        SaveHintLabel.Text = existing is null ? "写一点就会自动保存" : $"已保存 · {existing.UpdatedAt}";
 
         WeekFragments.Children.Clear();
-        foreach (var answer in await _store.ListRecentAnswersAsync(7))
+        var answers = await _store.ListRecentAnswersAsync(7);
+        if (answers.Count == 0)
         {
             WeekFragments.Children.Add(new Label
             {
-                Text = $"{answer.AnsweredOn}  {Trim(answer.Body, 48)}",
+                Text = "本周还没有碎片。今天的一句，就是开场。",
                 FontSize = 13,
                 TextColor = (Color)Application.Current!.Resources["MutedInk"],
+            });
+            return;
+        }
+
+        foreach (var answer in answers)
+        {
+            WeekFragments.Children.Add(new Border
+            {
+                StrokeThickness = 0,
+                BackgroundColor = (Color)Application.Current!.Resources["StoneSurface"],
+                StrokeShape = new RoundRectangle { CornerRadius = 12 },
+                Padding = new Thickness(14, 12),
+                Content = new VerticalStackLayout
+                {
+                    Spacing = 4,
+                    Children =
+                    {
+                        new Label
+                        {
+                            Text = answer.AnsweredOn,
+                            FontSize = 12,
+                            TextColor = (Color)Application.Current.Resources["MutedInk"],
+                        },
+                        new Label
+                        {
+                            Text = string.IsNullOrWhiteSpace(answer.PromptText) ? "" : answer.PromptText,
+                            FontSize = 12,
+                            TextColor = (Color)Application.Current.Resources["MutedInk"],
+                        },
+                        new Label
+                        {
+                            Text = Trim(answer.Body, 80),
+                            FontSize = 14,
+                            TextColor = (Color)Application.Current.Resources["SoftInk"],
+                        },
+                    },
+                },
             });
         }
     }
@@ -77,7 +116,6 @@ public partial class DailyPromptPage : ContentPage
         }
         catch (TaskCanceledException)
         {
-            // debounce
         }
     }
 
