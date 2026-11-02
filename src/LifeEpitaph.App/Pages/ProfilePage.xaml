@@ -8,8 +8,32 @@
     <ScrollView>
         <VerticalStackLayout Padding="28,36" Spacing="18">
             <Label Text="我的" Style="{StaticResource BrandTitle}" />
-            <Label Text="私密空间与基础设置 · M1 占位"
+            <Label Text="私密空间：自由日志与基础设置"
                    Style="{StaticResource SoftSubtitle}" />
+
+            <Label Text="自由日志" Style="{StaticResource SectionLabel}" Margin="0,8,0,0" />
+            <Label Text="不限今日提问。想到什么就写下一段，只给你自己看。"
+                   Style="{StaticResource SoftSubtitle}" />
+
+            <Editor x:Name="JournalEditor"
+                    Placeholder="随便写——地铁上的一句、晚饭的味道、没说出口的话…"
+                    AutoSize="TextChanges"
+                    MinimumHeightRequest="120"
+                    BackgroundColor="{StaticResource EditorSurface}"
+                    TextColor="{StaticResource SoftInk}"
+                    PlaceholderColor="{StaticResource MutedInk}" />
+
+            <Button Text="写入日志"
+                    Style="{StaticResource QuietButton}"
+                    Clicked="OnSaveJournalClicked" />
+            <Label x:Name="JournalHintLabel"
+                   Text=""
+                   FontSize="12"
+                   TextColor="{StaticResource MutedInk}" />
+
+            <VerticalStackLayout x:Name="JournalList" Spacing="10" Margin="0,4,0,12" />
+
+            <BoxView HeightRequest="1" Color="{StaticResource Hairline}" Margin="0,8" />
 
             <Border StrokeThickness="0"
                     BackgroundColor="{StaticResource StoneSurface}"
