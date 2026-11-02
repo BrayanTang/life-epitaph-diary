@@ -33,16 +33,13 @@ public sealed class LocalStore
             await _db.CreateTableAsync<LocalChapterEnrichment>();
             await _db.CreateTableAsync<LocalJournalEntry>();
             await _db.CreateTableAsync<LocalSession>();
-            await _db.CreateTableAsync<LocalPlazaShare>();
+            await _db.CreateTableAsync<LocalPlazaPost>();
 
             var tombstone = await _db.Table<LocalTombstone>().FirstOrDefaultAsync();
             if (tombstone is null)
             {
                 await _db.InsertAsync(new LocalTombstone());
             }
-
-            if (await _db.Table<LocalPlazaShare>().FirstOrDefaultAsync() is null)
-                await _db.InsertAsync(new LocalPlazaShare());
 
             await EnsureStoryChaptersAsync();
 
@@ -170,76 +167,85 @@ public sealed class LocalStore
             .ToListAsync();
     }
 
-    public async Task<LocalPlazaShare> GetPlazaShareAsync()
+    public async Task<LocalPlazaPost> ShareJournalToPlazaAsync(LocalJournalEntry entry)
     {
         await EnsureInitializedAsync();
-        return await _db.Table<LocalPlazaShare>().FirstAsync();
-    }
+        var existing = await _db.Table<LocalPlazaPost>()
+            .Where(p => p.Kind == "journal" && p.SourceId == entry.Id)
+            .FirstOrDefaultAsync();
+        if (existing is not null)
+            return existing;
 
-    public async Task SavePlazaShareAsync(LocalPlazaShare share)
-    {
-        await EnsureInitializedAsync();
-        share.Id = 1;
-        await _db.InsertOrReplaceAsync(share);
-    }
-
-    public async Task<PlazaCardDto> BuildSharedPlazaCardAsync()
-    {
-        await EnsureInitializedAsync();
-        var tombstone = await GetTombstoneAsync();
-        var share = await GetPlazaShareAsync();
-        var labels = new List<string>();
-        _ = Guid.TryParse(tombstone.Id, out var id);
-
-        var card = new PlazaCardDto
+        var post = new LocalPlazaPost
         {
-            TombstoneId = id == Guid.Empty ? Guid.NewGuid() : id,
-            IsMine = true,
+            Kind = "journal",
+            SourceId = entry.Id,
+            Title = "一条自由日志",
+            Body = entry.Body,
             FlowerCount = 0,
+            CreatedAt = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm"),
         };
+        await _db.InsertAsync(post);
+        return post;
+    }
 
-        if (share.ShareDisplayName != 0)
+    public async Task<LocalPlazaPost> ShareChapterToPlazaAsync(LocalChapter chapter)
+    {
+        await EnsureInitializedAsync();
+        var existing = await _db.Table<LocalPlazaPost>()
+            .Where(p => p.Kind == "chapter" && p.SourceId == chapter.Id)
+            .FirstOrDefaultAsync();
+        if (existing is not null)
+            return existing;
+
+        var post = new LocalPlazaPost
         {
-            card.DisplayName = tombstone.DisplayName;
-            labels.Add("墓名");
-        }
+            Kind = "chapter",
+            SourceId = chapter.Id,
+            Title = chapter.Title,
+            Body = chapter.Body,
+            FlowerCount = 0,
+            CreatedAt = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm"),
+        };
+        await _db.InsertAsync(post);
+        return post;
+    }
 
-        if (share.ShareEpitaph != 0)
+    public async Task<List<LocalPlazaPost>> ListMyPlazaPostsAsync()
+    {
+        await EnsureInitializedAsync();
+        return await _db.Table<LocalPlazaPost>()
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<LocalPlazaPost?> AddFlowerToMyPostAsync(string postId)
+    {
+        await EnsureInitializedAsync();
+        var post = await _db.Table<LocalPlazaPost>().Where(p => p.Id == postId).FirstOrDefaultAsync();
+        if (post is null)
+            return null;
+        post.FlowerCount += 1;
+        await _db.UpdateAsync(post);
+        return post;
+    }
+
+    public async Task<PlazaCardDto> ToPlazaCardAsync(LocalPlazaPost post, bool isMine = true)
+    {
+        var tombstone = await GetTombstoneAsync();
+        _ = Guid.TryParse(tombstone.Id, out var tid);
+        return new PlazaCardDto
         {
-            card.Epitaph = tombstone.Epitaph;
-            labels.Add("墓志铭");
-        }
-
-        if (share.ShareStatus != 0)
-        {
-            card.Status = tombstone.Status;
-            labels.Add("状态");
-        }
-
-        if (share.ShareSkin != 0)
-        {
-            card.SkinId = tombstone.SkinId;
-            labels.Add("皮肤");
-        }
-
-        if (share.ShareChapterTitles != 0)
-        {
-            card.RecentChapterTitles = (await ListChaptersAsync()).Take(3).Select(c => c.Title).ToList();
-            labels.Add("近章标题");
-        }
-
-        if (share.ShareMoodSnippet != 0)
-        {
-            var latest = (await ListJournalEntriesAsync(1)).FirstOrDefault();
-            if (latest is not null)
-            {
-                card.MoodSnippet = latest.Body.Length <= 36 ? latest.Body : latest.Body[..36] + "…";
-                labels.Add("一句心情");
-            }
-        }
-
-        card.SharedLabels = labels;
-        return card;
+            TombstoneId = tid == Guid.Empty ? Guid.NewGuid() : tid,
+            PostId = post.Id,
+            Kind = post.Kind,
+            DisplayName = tombstone.DisplayName,
+            Title = post.Title,
+            Body = post.Body,
+            FlowerCount = post.FlowerCount,
+            IsMine = isMine,
+            CreatedAt = post.CreatedAt,
+        };
     }
 
     private async Task EnsureStoryChaptersAsync()

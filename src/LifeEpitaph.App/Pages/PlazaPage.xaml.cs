@@ -8,6 +8,7 @@ public partial class PlazaPage : ContentPage
 {
     private readonly ApiClient _api;
     private readonly LocalStore _store;
+    private bool _mineOnly;
 
     public PlazaPage()
     {
@@ -22,71 +23,172 @@ public partial class PlazaPage : ContentPage
         await ReloadAsync();
     }
 
+    private async void OnAllTabClicked(object? sender, EventArgs e)
+    {
+        _mineOnly = false;
+        StyleTabs();
+        await ReloadAsync();
+    }
+
+    private async void OnMineTabClicked(object? sender, EventArgs e)
+    {
+        _mineOnly = true;
+        StyleTabs();
+        await ReloadAsync();
+    }
+
+    private void StyleTabs()
+    {
+        if (_mineOnly)
+        {
+            MineTabButton.Style = (Style)Application.Current!.Resources["QuietButton"];
+            AllTabButton.BackgroundColor = Colors.Transparent;
+            AllTabButton.TextColor = (Color)Application.Current.Resources["AccentMoss"];
+            SectionHint.Text = "我分享出去的内容，以及收到的献花数";
+        }
+        else
+        {
+            AllTabButton.Style = (Style)Application.Current!.Resources["QuietButton"];
+            MineTabButton.BackgroundColor = Colors.Transparent;
+            MineTabButton.TextColor = (Color)Application.Current.Resources["AccentMoss"];
+            SectionHint.Text = "广场动态";
+        }
+    }
+
     private async Task ReloadAsync()
     {
+        StyleTabs();
         PlazaList.Children.Clear();
 
-        var cards = (await _api.GetPlazaAsync()).ToList();
-        var mine = await _store.GetTombstoneAsync();
-        if (mine.IsListedPublic != 0)
+        if (_mineOnly)
         {
-            var myCard = await _store.BuildSharedPlazaCardAsync();
-            cards.RemoveAll(c => c.TombstoneId == myCard.TombstoneId
-                || (c.IsMine)
-                || (!string.IsNullOrEmpty(myCard.DisplayName)
-                    && c.DisplayName == myCard.DisplayName
-                    && c.Epitaph == myCard.Epitaph));
-            cards.Insert(0, myCard);
+            var mine = await _store.ListMyPlazaPostsAsync();
+            if (mine.Count == 0)
+            {
+                PlazaList.Children.Add(new Label
+                {
+                    Text = "还没有分享。去「我的」选一条日志，或去「人生剧情」分享一章。",
+                    FontSize = 14,
+                    TextColor = (Color)Application.Current!.Resources["MutedInk"],
+                });
+                return;
+            }
+
+            foreach (var post in mine)
+            {
+                var card = await _store.ToPlazaCardAsync(post);
+                PlazaList.Children.Add(BuildCard(card, allowFlower: false));
+            }
+            return;
+        }
+
+        var cards = (await _api.GetPlazaAsync()).ToList();
+        foreach (var post in await _store.ListMyPlazaPostsAsync())
+        {
+            var mineCard = await _store.ToPlazaCardAsync(post);
+            cards.RemoveAll(c => c.PostId == mineCard.PostId);
+            cards.Insert(0, mineCard);
+        }
+
+        if (cards.Count == 0)
+        {
+            PlazaList.Children.Add(new Label
+            {
+                Text = "广场还空着。",
+                FontSize = 14,
+                TextColor = (Color)Application.Current!.Resources["MutedInk"],
+            });
+            return;
         }
 
         foreach (var card in cards)
-            PlazaList.Children.Add(BuildCard(card));
+            PlazaList.Children.Add(BuildCard(card, allowFlower: !card.IsMine));
     }
 
-    private View BuildCard(PlazaCardDto card)
+    private View BuildCard(PlazaCardDto card, bool allowFlower)
     {
-        var stack = new VerticalStackLayout { Spacing = 8 };
-        foreach (var view in PlazaCardViews.BuildDetailViews(card))
-            stack.Children.Add(view);
+        var soft = (Color)Application.Current!.Resources["SoftInk"];
+        var muted = (Color)Application.Current.Resources["MutedInk"];
+        var kindLabel = card.Kind == "chapter" ? "人生剧情" : "自由日志";
 
-        var flowerButton = new Button
+        var stack = new VerticalStackLayout
         {
-            Text = "献一束花",
-            Style = (Style)Application.Current!.Resources["QuietButton"],
-            HorizontalOptions = LayoutOptions.Start,
-            Padding = new Thickness(14, 8),
-            FontSize = 13,
+            Spacing = 8,
+            Children =
+            {
+                new Label
+                {
+                    Text = card.IsMine ? $"我的{kindLabel}" : $"{card.DisplayName} · {kindLabel}",
+                    FontSize = 12,
+                    TextColor = (Color)Application.Current.Resources["AccentMoss"],
+                },
+                new Label
+                {
+                    Text = string.IsNullOrWhiteSpace(card.Title) ? "分享" : card.Title,
+                    FontSize = 17,
+                    FontAttributes = FontAttributes.Bold,
+                    TextColor = soft,
+                },
+                new Label
+                {
+                    Text = card.Body,
+                    FontSize = 14,
+                    LineHeight = 1.35,
+                    TextColor = soft,
+                },
+                new Label
+                {
+                    Text = $"献花 {card.FlowerCount}" + (string.IsNullOrWhiteSpace(card.CreatedAt) ? "" : $" · {card.CreatedAt}"),
+                    FontSize = 12,
+                    TextColor = muted,
+                },
+            },
         };
 
-        var flowerCountLabel = stack.Children.OfType<Label>().LastOrDefault(l => l.Text.StartsWith("献花", StringComparison.Ordinal));
-
-        flowerButton.Clicked += async (_, _) =>
+        if (allowFlower)
         {
-            flowerButton.IsEnabled = false;
-            try
+            var flowerButton = new Button
             {
-                var updated = await _api.OfferFlowerAsync(card.TombstoneId);
-                card.FlowerCount = updated.FlowerCount;
-                if (flowerCountLabel is not null)
-                    flowerCountLabel.Text = $"献花  {card.FlowerCount}";
-                flowerButton.Text = "已献花";
-                await Task.Delay(400);
-                flowerButton.Text = "再献一束";
-            }
-            catch
+                Text = "献一束花",
+                Style = (Style)Application.Current.Resources["QuietButton"],
+                HorizontalOptions = LayoutOptions.Start,
+                Padding = new Thickness(14, 8),
+                FontSize = 13,
+            };
+            var countLabel = (Label)stack.Children[^1];
+            flowerButton.Clicked += async (_, _) =>
             {
-                card.FlowerCount += 1;
-                if (flowerCountLabel is not null)
-                    flowerCountLabel.Text = $"献花  {card.FlowerCount}";
-                flowerButton.Text = "已献花（本地）";
-            }
-            finally
-            {
-                flowerButton.IsEnabled = true;
-            }
-        };
+                flowerButton.IsEnabled = false;
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(card.PostId))
+                    {
+                        var updated = await _store.AddFlowerToMyPostAsync(card.PostId);
+                        if (updated is not null)
+                            card.FlowerCount = updated.FlowerCount;
+                    }
 
-        stack.Children.Add(flowerButton);
+                    try
+                    {
+                        var remote = await _api.OfferFlowerAsync(card.TombstoneId);
+                        card.FlowerCount = Math.Max(card.FlowerCount, remote.FlowerCount);
+                    }
+                    catch
+                    {
+                        if (string.IsNullOrWhiteSpace(card.PostId))
+                            card.FlowerCount += 1;
+                    }
+
+                    countLabel.Text = $"献花 {card.FlowerCount}" + (string.IsNullOrWhiteSpace(card.CreatedAt) ? "" : $" · {card.CreatedAt}");
+                    flowerButton.Text = "已献花";
+                }
+                finally
+                {
+                    flowerButton.IsEnabled = true;
+                }
+            };
+            stack.Children.Add(flowerButton);
+        }
 
         return new Border
         {

@@ -8,8 +8,25 @@
     <ScrollView>
         <VerticalStackLayout Padding="28,36" Spacing="16">
             <Label Text="墓碑广场" Style="{StaticResource BrandTitle}" />
-            <Label Text="看别人愿意公开的详情 · 可献花 · 无评论"
+            <Label Text="别人分享的日志与剧情 · 可献花 · 无评论"
                    Style="{StaticResource SoftSubtitle}" />
+
+            <HorizontalStackLayout Spacing="12">
+                <Button x:Name="AllTabButton"
+                        Text="全部"
+                        Style="{StaticResource QuietButton}"
+                        Clicked="OnAllTabClicked" />
+                <Button x:Name="MineTabButton"
+                        Text="我的"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource AccentMoss}"
+                        Clicked="OnMineTabClicked" />
+            </HorizontalStackLayout>
+
+            <Label x:Name="SectionHint"
+                   Text=""
+                   Style="{StaticResource SoftSubtitle}" />
+
             <VerticalStackLayout x:Name="PlazaList" Spacing="14" Margin="0,8,0,0" />
         </VerticalStackLayout>
     </ScrollView>

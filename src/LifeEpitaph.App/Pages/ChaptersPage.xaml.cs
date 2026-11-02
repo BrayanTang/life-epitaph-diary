@@ -6,11 +6,13 @@ namespace LifeEpitaph.App.Pages;
 public partial class ChaptersPage : ContentPage
 {
     private readonly LocalStore _store;
+    private readonly ApiClient _api;
 
     public ChaptersPage()
     {
         InitializeComponent();
         _store = ServiceHelper.GetRequiredService<LocalStore>();
+        _api = ServiceHelper.GetRequiredService<ApiClient>();
     }
 
     protected override async void OnAppearing()
@@ -37,7 +39,26 @@ public partial class ChaptersPage : ContentPage
                 await Shell.Current.GoToAsync($"{nameof(ChapterDetailPage)}?id={Uri.EscapeDataString(chapterId)}");
             };
 
-            var card = new Border
+            var shareButton = new Button
+            {
+                Text = "分享到广场",
+                BackgroundColor = Colors.Transparent,
+                TextColor = (Color)Application.Current.Resources["AccentMoss"],
+                HorizontalOptions = LayoutOptions.Start,
+                Padding = new Thickness(0, 8),
+                FontSize = 13,
+            };
+            var captured = chapter;
+            shareButton.Clicked += async (_, _) =>
+            {
+                shareButton.IsEnabled = false;
+                var post = await _store.ShareChapterToPlazaAsync(captured);
+                var card = await _store.ToPlazaCardAsync(post);
+                try { await _api.SetPlazaVisibilityAsync(true, card); } catch { }
+                shareButton.Text = "已分享";
+            };
+
+            ChapterList.Children.Add(new Border
             {
                 StrokeThickness = 0,
                 BackgroundColor = (Color)Application.Current.Resources["StoneSurface"],
@@ -68,11 +89,14 @@ public partial class ChaptersPage : ContentPage
                             TextColor = (Color)Application.Current.Resources["SoftInk"],
                             LineBreakMode = LineBreakMode.WordWrap,
                         },
-                        openButton,
+                        new HorizontalStackLayout
+                        {
+                            Spacing = 16,
+                            Children = { openButton, shareButton },
+                        },
                     },
                 },
-            };
-            ChapterList.Children.Add(card);
+            });
         }
     }
 }

@@ -3,13 +3,13 @@ using LifeEpitaph.Shared.Models;
 
 namespace LifeEpitaph.Api.Services;
 
-/// <summary>M1 in-memory store for anonymous sessions, answers, and plaza mocks.</summary>
+/// <summary>M1 in-memory store for anonymous sessions, answers, and plaza posts.</summary>
 public sealed class InMemoryAppStore
 {
     private readonly ConcurrentDictionary<string, Guid> _deviceToUser = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<(Guid UserId, DateOnly Day), AnswerDto> _answers = new();
     private readonly ConcurrentDictionary<Guid, TombstoneDto> _tombstones = new();
-    private readonly ConcurrentDictionary<Guid, PlazaCardDto> _publishedCards = new();
+    private readonly ConcurrentDictionary<string, PlazaCardDto> _publishedPosts = new(StringComparer.Ordinal);
 
     public AnonymousSessionResponse GetOrCreateSession(AnonymousSessionRequest request)
     {
@@ -88,92 +88,73 @@ public sealed class InMemoryAppStore
         if (!_tombstones.TryGetValue(userId, out var tombstone))
             return null;
 
-        tombstone.IsListedPublic = isListedPublic;
-        if (!isListedPublic)
-        {
-            _publishedCards.TryRemove(tombstone.Id, out _);
+        tombstone.IsListedPublic = isListedPublic || card is not null;
+        if (card is null)
             return tombstone;
-        }
 
-        var published = card ?? new PlazaCardDto
-        {
-            TombstoneId = tombstone.Id,
-            DisplayName = tombstone.DisplayName,
-            Epitaph = tombstone.Epitaph,
-            Status = tombstone.Status,
-            SkinId = tombstone.SkinId,
-            FlowerCount = tombstone.FlowerCount,
-        };
-        published.TombstoneId = tombstone.Id;
-        published.FlowerCount = tombstone.FlowerCount;
-        published.IsMine = false;
-        _publishedCards[tombstone.Id] = published;
+        if (string.IsNullOrWhiteSpace(card.PostId))
+            card.PostId = Guid.NewGuid().ToString("N");
+        card.TombstoneId = tombstone.Id;
+        card.DisplayName = string.IsNullOrWhiteSpace(card.DisplayName) ? tombstone.DisplayName : card.DisplayName;
+        card.IsMine = false;
+        _publishedPosts[card.PostId] = card;
         return tombstone;
     }
 
     public IReadOnlyList<PlazaCardDto> ListPlaza()
     {
-        var cards = new List<PlazaCardDto>();
-        cards.AddRange(_publishedCards.Values);
-        cards.AddRange(PlazaCards);
+        var cards = _publishedPosts.Values
+            .OrderByDescending(c => c.CreatedAt)
+            .ToList();
+        cards.AddRange(MockPosts);
         return cards;
     }
 
-    private static readonly List<PlazaCardDto> PlazaCards =
+    private static readonly List<PlazaCardDto> MockPosts =
     [
         new PlazaCardDto
         {
             TombstoneId = Guid.Parse("11111111-1111-4111-8111-111111111111"),
+            PostId = "mock-journal-1",
+            Kind = "journal",
             DisplayName = "雾里的猫",
-            Epitaph = "路过人间，轻轻放下一束花。",
-            Status = "发呆",
-            SkinId = "moss-kitty",
+            Title = "一条自由日志",
+            Body = "路过人间，轻轻放下一束花。今天只想慢慢走路。",
             FlowerCount = 12,
-            RecentChapterTitles = ["雨停的那一晚", "把钥匙放在口袋里"],
-            MoodSnippet = "今天只想慢慢走路。",
-            SharedLabels = ["墓名", "墓志铭", "状态", "皮肤", "近章标题", "一句心情"],
+            CreatedAt = "2026-11-01 21:10",
         },
         new PlazaCardDto
         {
             TombstoneId = Guid.Parse("22222222-2222-4222-8222-222222222222"),
+            PostId = "mock-chapter-1",
+            Kind = "chapter",
             DisplayName = "南风石",
-            Epitaph = "不必被熟人看见，也值得被温柔记录。",
-            Status = "安静",
-            SkinId = "soft-stone",
+            Title = "周一的白噪音",
+            Body = "不必被熟人看见，也值得被温柔记录。窗边的光刚好够写一行字。",
             FlowerCount = 5,
-            RecentChapterTitles = ["周一的白噪音"],
-            MoodSnippet = "窗边的光刚好够写一行字。",
-            SharedLabels = ["墓名", "墓志铭", "状态", "皮肤", "近章标题", "一句心情"],
+            CreatedAt = "2026-11-01 18:40",
         },
         new PlazaCardDto
         {
             TombstoneId = Guid.Parse("33333333-3333-4333-8333-333333333333"),
+            PostId = "mock-chapter-2",
+            Kind = "chapter",
             DisplayName = "未署名",
-            Epitaph = "碎片会自己长成故事。",
-            Status = "想说话",
-            SkinId = "lantern-night",
+            Title = "一个人的地铁",
+            Body = "碎片会自己长成故事。地铁里没说话，但故事开始了。",
             FlowerCount = 28,
-            RecentChapterTitles = ["第三章 · 短答的回声", "窗边的咖啡凉了", "一个人的地铁"],
-            MoodSnippet = "地铁里没说话，但故事开始了。",
-            SharedLabels = ["墓名", "墓志铭", "状态", "皮肤", "近章标题", "一句心情"],
+            CreatedAt = "2026-10-30 09:12",
         },
     ];
 
     public PlazaCardDto? OfferFlower(Guid tombstoneId)
     {
-        if (_publishedCards.TryGetValue(tombstoneId, out var published))
-        {
-            published.FlowerCount += 1;
-            if (_tombstones.Values.FirstOrDefault(t => t.Id == tombstoneId) is { } mine)
-                mine.FlowerCount = published.FlowerCount;
-            return published;
-        }
-
-        var card = PlazaCards.FirstOrDefault(c => c.TombstoneId == tombstoneId);
-        if (card is null)
+        var post = _publishedPosts.Values.FirstOrDefault(p => p.TombstoneId == tombstoneId)
+                   ?? MockPosts.FirstOrDefault(p => p.TombstoneId == tombstoneId);
+        if (post is null)
             return null;
 
-        card.FlowerCount += 1;
-        return card;
+        post.FlowerCount += 1;
+        return post;
     }
 }

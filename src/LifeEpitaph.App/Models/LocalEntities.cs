@@ -70,16 +70,17 @@ public sealed class LocalSession
     public string AccessToken { get; set; } = string.Empty;
 }
 
-/// <summary>Which tombstone fields the user chose to publish to plaza.</summary>
-public sealed class LocalPlazaShare
+/// <summary>A journal scrap or chapter the user shared to plaza.</summary>
+public sealed class LocalPlazaPost
 {
     [PrimaryKey]
-    public int Id { get; set; } = 1;
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
 
-    public int ShareDisplayName { get; set; } = 1;
-    public int ShareEpitaph { get; set; } = 1;
-    public int ShareStatus { get; set; } = 1;
-    public int ShareSkin { get; set; } = 1;
-    public int ShareChapterTitles { get; set; } = 1;
-    public int ShareMoodSnippet { get; set; }
+    /// <summary>journal | chapter</summary>
+    public string Kind { get; set; } = "journal";
+    public string SourceId { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Body { get; set; } = string.Empty;
+    public int FlowerCount { get; set; }
+    public string CreatedAt { get; set; } = string.Empty;
 }
