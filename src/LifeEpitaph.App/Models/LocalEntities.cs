@@ -69,3 +69,17 @@ public sealed class LocalSession
     public string UserId { get; set; } = string.Empty;
     public string AccessToken { get; set; } = string.Empty;
 }
+
+/// <summary>Which tombstone fields the user chose to publish to plaza.</summary>
+public sealed class LocalPlazaShare
+{
+    [PrimaryKey]
+    public int Id { get; set; } = 1;
+
+    public int ShareDisplayName { get; set; } = 1;
+    public int ShareEpitaph { get; set; } = 1;
+    public int ShareStatus { get; set; } = 1;
+    public int ShareSkin { get; set; } = 1;
+    public int ShareChapterTitles { get; set; } = 1;
+    public int ShareMoodSnippet { get; set; }
+}

@@ -91,7 +91,7 @@ app.MapPut("/tombstone/me/visibility", (HttpRequest http, PlazaVisibilityRequest
     if (!TryGetUserId(http, out var userId))
         return Results.Unauthorized();
 
-    var tombstone = store.SetListedPublic(userId, body.IsListedPublic);
+    var tombstone = store.SetListedPublic(userId, body.IsListedPublic, body.Card);
     return tombstone is null ? Results.NotFound() : Results.Ok(tombstone);
 });
 

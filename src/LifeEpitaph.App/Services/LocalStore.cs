@@ -1,4 +1,5 @@
 using LifeEpitaph.App.Models;
+using LifeEpitaph.Shared.Models;
 using SQLite;
 
 namespace LifeEpitaph.App.Services;
@@ -32,12 +33,16 @@ public sealed class LocalStore
             await _db.CreateTableAsync<LocalChapterEnrichment>();
             await _db.CreateTableAsync<LocalJournalEntry>();
             await _db.CreateTableAsync<LocalSession>();
+            await _db.CreateTableAsync<LocalPlazaShare>();
 
             var tombstone = await _db.Table<LocalTombstone>().FirstOrDefaultAsync();
             if (tombstone is null)
             {
                 await _db.InsertAsync(new LocalTombstone());
             }
+
+            if (await _db.Table<LocalPlazaShare>().FirstOrDefaultAsync() is null)
+                await _db.InsertAsync(new LocalPlazaShare());
 
             await EnsureStoryChaptersAsync();
 
@@ -163,6 +168,78 @@ public sealed class LocalStore
             .OrderByDescending(e => e.CreatedAt)
             .Take(take)
             .ToListAsync();
+    }
+
+    public async Task<LocalPlazaShare> GetPlazaShareAsync()
+    {
+        await EnsureInitializedAsync();
+        return await _db.Table<LocalPlazaShare>().FirstAsync();
+    }
+
+    public async Task SavePlazaShareAsync(LocalPlazaShare share)
+    {
+        await EnsureInitializedAsync();
+        share.Id = 1;
+        await _db.InsertOrReplaceAsync(share);
+    }
+
+    public async Task<PlazaCardDto> BuildSharedPlazaCardAsync()
+    {
+        await EnsureInitializedAsync();
+        var tombstone = await GetTombstoneAsync();
+        var share = await GetPlazaShareAsync();
+        var labels = new List<string>();
+        _ = Guid.TryParse(tombstone.Id, out var id);
+
+        var card = new PlazaCardDto
+        {
+            TombstoneId = id == Guid.Empty ? Guid.NewGuid() : id,
+            IsMine = true,
+            FlowerCount = 0,
+        };
+
+        if (share.ShareDisplayName != 0)
+        {
+            card.DisplayName = tombstone.DisplayName;
+            labels.Add("墓名");
+        }
+
+        if (share.ShareEpitaph != 0)
+        {
+            card.Epitaph = tombstone.Epitaph;
+            labels.Add("墓志铭");
+        }
+
+        if (share.ShareStatus != 0)
+        {
+            card.Status = tombstone.Status;
+            labels.Add("状态");
+        }
+
+        if (share.ShareSkin != 0)
+        {
+            card.SkinId = tombstone.SkinId;
+            labels.Add("皮肤");
+        }
+
+        if (share.ShareChapterTitles != 0)
+        {
+            card.RecentChapterTitles = (await ListChaptersAsync()).Take(3).Select(c => c.Title).ToList();
+            labels.Add("近章标题");
+        }
+
+        if (share.ShareMoodSnippet != 0)
+        {
+            var latest = (await ListJournalEntriesAsync(1)).FirstOrDefault();
+            if (latest is not null)
+            {
+                card.MoodSnippet = latest.Body.Length <= 36 ? latest.Body : latest.Body[..36] + "…";
+                labels.Add("一句心情");
+            }
+        }
+
+        card.SharedLabels = labels;
+        return card;
     }
 
     private async Task EnsureStoryChaptersAsync()

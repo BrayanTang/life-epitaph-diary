@@ -8,7 +8,7 @@
     <ScrollView>
         <VerticalStackLayout Padding="28,36" Spacing="18">
             <Label Text="我的" Style="{StaticResource BrandTitle}" />
-            <Label Text="私密空间：自由日志与基础设置"
+            <Label Text="私密空间：自由日志，以及你愿意分享到广场的内容"
                    Style="{StaticResource SoftSubtitle}" />
 
             <Label Text="自由日志" Style="{StaticResource SectionLabel}" Margin="0,8,0,0" />
@@ -35,6 +35,69 @@
 
             <BoxView HeightRequest="1" Color="{StaticResource Hairline}" Margin="0,8" />
 
+            <Label Text="分享到墓碑广场" Style="{StaticResource SectionLabel}" />
+            <Label Text="勾选你愿意公开的字段。章节正文与完整日志永远不会上广场。"
+                   Style="{StaticResource SoftSubtitle}" />
+
+            <VerticalStackLayout Spacing="8">
+                <HorizontalStackLayout Spacing="10">
+                    <CheckBox x:Name="ShareNameCheck" Color="{StaticResource AccentMoss}" CheckedChanged="OnShareChanged" />
+                    <Label Text="墓名" VerticalOptions="Center" TextColor="{StaticResource SoftInk}" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="10">
+                    <CheckBox x:Name="ShareEpitaphCheck" Color="{StaticResource AccentMoss}" CheckedChanged="OnShareChanged" />
+                    <Label Text="墓志铭" VerticalOptions="Center" TextColor="{StaticResource SoftInk}" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="10">
+                    <CheckBox x:Name="ShareStatusCheck" Color="{StaticResource AccentMoss}" CheckedChanged="OnShareChanged" />
+                    <Label Text="状态" VerticalOptions="Center" TextColor="{StaticResource SoftInk}" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="10">
+                    <CheckBox x:Name="ShareSkinCheck" Color="{StaticResource AccentMoss}" CheckedChanged="OnShareChanged" />
+                    <Label Text="皮肤" VerticalOptions="Center" TextColor="{StaticResource SoftInk}" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="10">
+                    <CheckBox x:Name="ShareChaptersCheck" Color="{StaticResource AccentMoss}" CheckedChanged="OnShareChanged" />
+                    <Label Text="近章标题（不含正文）" VerticalOptions="Center" TextColor="{StaticResource SoftInk}" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="10">
+                    <CheckBox x:Name="ShareMoodCheck" Color="{StaticResource AccentMoss}" CheckedChanged="OnShareChanged" />
+                    <Label Text="最近一句心情（来自自由日志）" VerticalOptions="Center" TextColor="{StaticResource SoftInk}" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <Label Text="广场预览" Style="{StaticResource SectionLabel}" Margin="0,8,0,0" />
+            <Border x:Name="PreviewBorder"
+                    StrokeThickness="0"
+                    BackgroundColor="{StaticResource StoneSurface}"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="18">
+                <VerticalStackLayout x:Name="PreviewStack" Spacing="6" />
+            </Border>
+
+            <Label x:Name="PublicStatusLabel"
+                   Text="当前：未发布到广场"
+                   FontSize="13"
+                   TextColor="{StaticResource SoftInk}" />
+
+            <Button x:Name="PublishButton"
+                    Text="发布到广场"
+                    Style="{StaticResource QuietButton}"
+                    Clicked="OnPublishClicked" />
+            <Button x:Name="UnpublishButton"
+                    Text="从广场撤回"
+                    BackgroundColor="Transparent"
+                    TextColor="{StaticResource AccentMoss}"
+                    IsVisible="False"
+                    Clicked="OnUnpublishClicked" />
+            <Button x:Name="GoPlazaButton"
+                    Text="去广场看看"
+                    Style="{StaticResource QuietButton}"
+                    IsVisible="False"
+                    Clicked="OnGoPlazaClicked" />
+
+            <BoxView HeightRequest="1" Color="{StaticResource Hairline}" Margin="0,8" />
+
             <Border StrokeThickness="0"
                     BackgroundColor="{StaticResource StoneSurface}"
                     StrokeShape="RoundRectangle 16"
@@ -45,28 +108,6 @@
                     <Label x:Name="UserIdLabel" FontSize="13" TextColor="{StaticResource MutedInk}" />
                 </VerticalStackLayout>
             </Border>
-
-            <HorizontalStackLayout Spacing="12">
-                <Label Text="出现在墓碑广场"
-                       VerticalOptions="Center"
-                       TextColor="{StaticResource SoftInk}" />
-                <Switch x:Name="PublicSwitch"
-                        IsToggled="False"
-                        OnColor="{StaticResource AccentMoss}"
-                        Toggled="OnPublicToggled" />
-            </HorizontalStackLayout>
-
-            <Label x:Name="PublicStatusLabel"
-                   Text="当前：仅自己可见"
-                   FontSize="13"
-                   TextColor="{StaticResource SoftInk}" />
-            <Label Text="打开后，你的墓碑会出现在广场最上方；关掉则撤回。"
-                   Style="{StaticResource SoftSubtitle}" />
-            <Button x:Name="GoPlazaButton"
-                    Text="去广场看看"
-                    Style="{StaticResource QuietButton}"
-                    IsVisible="False"
-                    Clicked="OnGoPlazaClicked" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

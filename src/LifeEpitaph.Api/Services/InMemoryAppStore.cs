@@ -9,6 +9,7 @@ public sealed class InMemoryAppStore
     private readonly ConcurrentDictionary<string, Guid> _deviceToUser = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<(Guid UserId, DateOnly Day), AnswerDto> _answers = new();
     private readonly ConcurrentDictionary<Guid, TombstoneDto> _tombstones = new();
+    private readonly ConcurrentDictionary<Guid, PlazaCardDto> _publishedCards = new();
 
     public AnonymousSessionResponse GetOrCreateSession(AnonymousSessionRequest request)
     {
@@ -82,32 +83,38 @@ public sealed class InMemoryAppStore
     public TombstoneDto? GetTombstone(Guid userId)
         => _tombstones.TryGetValue(userId, out var t) ? t : null;
 
-    public TombstoneDto? SetListedPublic(Guid userId, bool isListedPublic)
+    public TombstoneDto? SetListedPublic(Guid userId, bool isListedPublic, PlazaCardDto? card)
     {
         if (!_tombstones.TryGetValue(userId, out var tombstone))
             return null;
 
         tombstone.IsListedPublic = isListedPublic;
+        if (!isListedPublic)
+        {
+            _publishedCards.TryRemove(tombstone.Id, out _);
+            return tombstone;
+        }
+
+        var published = card ?? new PlazaCardDto
+        {
+            TombstoneId = tombstone.Id,
+            DisplayName = tombstone.DisplayName,
+            Epitaph = tombstone.Epitaph,
+            Status = tombstone.Status,
+            SkinId = tombstone.SkinId,
+            FlowerCount = tombstone.FlowerCount,
+        };
+        published.TombstoneId = tombstone.Id;
+        published.FlowerCount = tombstone.FlowerCount;
+        published.IsMine = false;
+        _publishedCards[tombstone.Id] = published;
         return tombstone;
     }
 
     public IReadOnlyList<PlazaCardDto> ListPlaza()
     {
         var cards = new List<PlazaCardDto>();
-        foreach (var tombstone in _tombstones.Values.Where(t => t.IsListedPublic))
-        {
-            cards.Add(new PlazaCardDto
-            {
-                TombstoneId = tombstone.Id,
-                DisplayName = tombstone.DisplayName,
-                Epitaph = tombstone.Epitaph,
-                Status = tombstone.Status,
-                SkinId = tombstone.SkinId,
-                FlowerCount = tombstone.FlowerCount,
-                RecentChapterTitles = ["（你的近章会在这里）"],
-            });
-        }
-
+        cards.AddRange(_publishedCards.Values);
         cards.AddRange(PlazaCards);
         return cards;
     }
@@ -123,6 +130,8 @@ public sealed class InMemoryAppStore
             SkinId = "moss-kitty",
             FlowerCount = 12,
             RecentChapterTitles = ["雨停的那一晚", "把钥匙放在口袋里"],
+            MoodSnippet = "今天只想慢慢走路。",
+            SharedLabels = ["墓名", "墓志铭", "状态", "皮肤", "近章标题", "一句心情"],
         },
         new PlazaCardDto
         {
@@ -133,6 +142,8 @@ public sealed class InMemoryAppStore
             SkinId = "soft-stone",
             FlowerCount = 5,
             RecentChapterTitles = ["周一的白噪音"],
+            MoodSnippet = "窗边的光刚好够写一行字。",
+            SharedLabels = ["墓名", "墓志铭", "状态", "皮肤", "近章标题", "一句心情"],
         },
         new PlazaCardDto
         {
@@ -143,24 +154,19 @@ public sealed class InMemoryAppStore
             SkinId = "lantern-night",
             FlowerCount = 28,
             RecentChapterTitles = ["第三章 · 短答的回声", "窗边的咖啡凉了", "一个人的地铁"],
+            MoodSnippet = "地铁里没说话，但故事开始了。",
+            SharedLabels = ["墓名", "墓志铭", "状态", "皮肤", "近章标题", "一句心情"],
         },
     ];
 
     public PlazaCardDto? OfferFlower(Guid tombstoneId)
     {
-        foreach (var mine in _tombstones.Values.Where(t => t.Id == tombstoneId))
+        if (_publishedCards.TryGetValue(tombstoneId, out var published))
         {
-            mine.FlowerCount += 1;
-            return new PlazaCardDto
-            {
-                TombstoneId = mine.Id,
-                DisplayName = mine.DisplayName,
-                Epitaph = mine.Epitaph,
-                Status = mine.Status,
-                SkinId = mine.SkinId,
-                FlowerCount = mine.FlowerCount,
-                RecentChapterTitles = ["（你的近章会在这里）"],
-            };
+            published.FlowerCount += 1;
+            if (_tombstones.Values.FirstOrDefault(t => t.Id == tombstoneId) is { } mine)
+                mine.FlowerCount = published.FlowerCount;
+            return published;
         }
 
         var card = PlazaCards.FirstOrDefault(c => c.TombstoneId == tombstoneId);

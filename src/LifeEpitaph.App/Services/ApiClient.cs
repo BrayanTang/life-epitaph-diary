@@ -70,10 +70,14 @@ public sealed class ApiClient
         return card;
     }
 
-    public async Task SetPlazaVisibilityAsync(bool isListedPublic)
+    public async Task SetPlazaVisibilityAsync(bool isListedPublic, PlazaCardDto? card = null)
     {
         using var requestMessage = await CreateAuthorizedAsync(HttpMethod.Put, "tombstone/me/visibility");
-        requestMessage.Content = JsonContent.Create(new PlazaVisibilityRequest { IsListedPublic = isListedPublic });
+        requestMessage.Content = JsonContent.Create(new PlazaVisibilityRequest
+        {
+            IsListedPublic = isListedPublic,
+            Card = card,
+        });
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
         var response = await _http.SendAsync(requestMessage, cts.Token);
         response.EnsureSuccessStatusCode();
