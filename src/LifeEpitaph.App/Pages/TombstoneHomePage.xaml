@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="LifeEpitaph.App.Pages.TombstoneHomePage"
+             Title="墓碑主页"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="28,36" Spacing="28">
+
+            <VerticalStackLayout Spacing="6">
+                <Label Text="人生墓碑日记"
+                       Style="{StaticResource BrandTitle}" />
+                <Label Text="安静地留下这一周的自己"
+                       Style="{StaticResource SoftSubtitle}" />
+            </VerticalStackLayout>
+
+            <BoxView HeightRequest="1" Color="{StaticResource Hairline}" />
+
+            <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
+                <Border StrokeThickness="0"
+                        BackgroundColor="{StaticResource StoneSurface}"
+                        WidthRequest="200"
+                        HeightRequest="240"
+                        StrokeShape="RoundRectangle 20"
+                        Padding="20">
+                    <VerticalStackLayout VerticalOptions="Center" Spacing="10">
+                        <BoxView HeightRequest="8"
+                                 WidthRequest="56"
+                                 Color="{StaticResource Hairline}"
+                                 HorizontalOptions="Center"
+                                 CornerRadius="4" />
+                        <Label x:Name="DisplayNameLabel"
+                               Text="无名之石"
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               HorizontalTextAlignment="Center"
+                               TextColor="{StaticResource SoftInk}" />
+                        <Label x:Name="StatusLabel"
+                               Text="状态 · 安静"
+                               FontSize="13"
+                               HorizontalTextAlignment="Center"
+                               TextColor="{StaticResource MutedInk}" />
+                        <Label x:Name="SkinLabel"
+                               Text="皮肤 soft-stone"
+                               FontSize="12"
+                               HorizontalTextAlignment="Center"
+                               TextColor="{StaticResource MutedInk}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Label x:Name="EpitaphLabel"
+                       Text="墓志铭"
+                       Style="{StaticResource EpitaphText}"
+                       HorizontalTextAlignment="Center"
+                       Margin="12,8,12,0" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="8">
+                <Label Text="近期章节" Style="{StaticResource SectionLabel}" />
+                <VerticalStackLayout x:Name="ChaptersPreview" Spacing="6" />
+            </VerticalStackLayout>
+
+            <Button Text="去写今日提问"
+                    Style="{StaticResource QuietButton}"
+                    Clicked="OnGoDailyPrompt" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="LifeEpitaph.App.Pages.DailyPromptPage"
+             Title="今日提问"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="28,36" Spacing="20">
+
+            <Label Text="今日提问" Style="{StaticResource BrandTitle}" />
+            <Label Text="短答即可，离开时会自动保存"
+                   Style="{StaticResource SoftSubtitle}" />
+
+            <Border StrokeThickness="0"
+                    BackgroundColor="{StaticResource StoneSurface}"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="20">
+                <Label x:Name="PromptLabel"
+                       Text="加载中…"
+                       FontSize="18"
+                       LineHeight="1.35"
+                       TextColor="{StaticResource SoftInk}" />
+            </Border>
+
+            <Editor x:Name="AnswerEditor"
+                    Placeholder="写一点就好…"
+                    AutoSize="TextChanges"
+                    MinimumHeightRequest="140"
+                    BackgroundColor="{StaticResource EditorSurface}"
+                    TextColor="{StaticResource SoftInk}"
+                    PlaceholderColor="{StaticResource MutedInk}"
+                    TextChanged="OnAnswerChanged" />
+
+            <Label x:Name="SaveHintLabel"
+                   Text=""
+                   FontSize="12"
+                   TextColor="{StaticResource MutedInk}" />
+
+            <Label Text="本周碎片" Style="{StaticResource SectionLabel}" Margin="0,12,0,0" />
+            <VerticalStackLayout x:Name="WeekFragments" Spacing="8" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
