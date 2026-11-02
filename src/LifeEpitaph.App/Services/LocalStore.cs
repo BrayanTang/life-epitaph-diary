@@ -30,6 +30,7 @@ public sealed class LocalStore
             await _db.CreateTableAsync<LocalAnswer>();
             await _db.CreateTableAsync<LocalChapter>();
             await _db.CreateTableAsync<LocalChapterEnrichment>();
+            await _db.CreateTableAsync<LocalJournalEntry>();
             await _db.CreateTableAsync<LocalSession>();
 
             var tombstone = await _db.Table<LocalTombstone>().FirstOrDefaultAsync();
@@ -139,6 +140,29 @@ public sealed class LocalStore
             Body = body,
             UpdatedAt = DateTimeOffset.Now.ToString("O"),
         });
+    }
+
+    public async Task<LocalJournalEntry> AddJournalEntryAsync(string body)
+    {
+        await EnsureInitializedAsync();
+        var now = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm");
+        var entry = new LocalJournalEntry
+        {
+            Body = body.Trim(),
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        await _db.InsertAsync(entry);
+        return entry;
+    }
+
+    public async Task<List<LocalJournalEntry>> ListJournalEntriesAsync(int take = 40)
+    {
+        await EnsureInitializedAsync();
+        return await _db.Table<LocalJournalEntry>()
+            .OrderByDescending(e => e.CreatedAt)
+            .Take(take)
+            .ToListAsync();
     }
 
     private async Task EnsureStoryChaptersAsync()

@@ -49,6 +49,17 @@ public sealed class LocalChapterEnrichment
     public string UpdatedAt { get; set; } = string.Empty;
 }
 
+/// <summary>Free-form private journal scrap — not tied to the daily prompt.</summary>
+public sealed class LocalJournalEntry
+{
+    [PrimaryKey]
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+
+    public string Body { get; set; } = string.Empty;
+    public string CreatedAt { get; set; } = string.Empty;
+    public string UpdatedAt { get; set; } = string.Empty;
+}
+
 public sealed class LocalSession
 {
     [PrimaryKey]
