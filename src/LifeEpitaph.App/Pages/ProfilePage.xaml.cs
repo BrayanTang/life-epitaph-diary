@@ -101,14 +101,28 @@ public partial class ProfilePage : ContentPage
         if (_suppressToggle)
             return;
 
-        var tombstone = await _store.GetTombstoneAsync();
-        tombstone.IsListedPublic = e.Value ? 1 : 0;
-        await _store.SaveTombstoneAsync(tombstone);
+        PublicSwitch.IsEnabled = false;
+        try
+        {
+            var tombstone = await _store.GetTombstoneAsync();
+            tombstone.IsListedPublic = e.Value ? 1 : 0;
+            await _store.SaveTombstoneAsync(tombstone);
+            ApplyPublicStatus(e.Value);
 
-        PublicStatusLabel.Text = e.Value ? "正在同步到广场…" : "正在从广场撤回…";
-        await _session.EnsureSessionAsync();
-        await _api.SetPlazaVisibilityAsync(e.Value);
-        ApplyPublicStatus(e.Value);
+            // Sync off the critical UI path; local switch already took effect.
+            await _api.SetPlazaVisibilityAsync(e.Value);
+        }
+        catch (Exception ex)
+        {
+            PublicStatusLabel.Text = e.Value
+                ? $"已本地公开（广场同步未完成：{ShortError(ex)}）"
+                : $"已本地私密（广场同步未完成：{ShortError(ex)}）";
+            GoPlazaButton.IsVisible = e.Value;
+        }
+        finally
+        {
+            PublicSwitch.IsEnabled = true;
+        }
     }
 
     private void ApplyPublicStatus(bool listed)
@@ -124,4 +138,7 @@ public partial class ProfilePage : ContentPage
 
     private static string Short(string value)
         => value.Length <= 12 ? value : $"{value[..6]}…{value[^4..]}";
+
+    private static string ShortError(Exception ex)
+        => ex is OperationCanceledException or TaskCanceledException ? "超时" : "网络";
 }

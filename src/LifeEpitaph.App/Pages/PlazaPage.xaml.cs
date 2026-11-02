@@ -81,8 +81,14 @@ public partial class PlazaPage : ContentPage
                 card.FlowerCount = updated.FlowerCount;
                 flowerLabel.Text = $"皮肤 {card.SkinId} · 献花 {card.FlowerCount}";
                 flowerButton.Text = "已献花";
-                await Task.Delay(600);
+                await Task.Delay(400);
                 flowerButton.Text = "再献一束";
+            }
+            catch
+            {
+                card.FlowerCount += 1;
+                flowerLabel.Text = $"皮肤 {card.SkinId} · 献花 {card.FlowerCount}";
+                flowerButton.Text = "已献花（本地）";
             }
             finally
             {
