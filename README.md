@@ -61,9 +61,17 @@ dotnet run --project src/LifeEpitaph.Api --launch-profile http
 ## 运行 MAUI（Windows）
 
 1. 先启动 API（见上），默认基址 `http://127.0.0.1:5188/`（App 内 Preferences 键 `api_base_url` 可改）。
-2. 用 Visual Studio 打开 `LifeEpitaph.sln`，将启动项目设为 `LifeEpitaph.App`。
-3. 选择 **Windows Machine** 或 **Android** 仿真器 / 设备后运行。
+2. **推荐 CLI（unpackaged WinUI）**（需 .NET 8 + `maui-windows`；仓库含 `global.json`）：
+
+```powershell
+dotnet build src/LifeEpitaph.App/LifeEpitaph.App.csproj -c Debug -f net8.0-windows10.0.19041.0
+.\src\LifeEpitaph.App\bin\Debug\net8.0-windows10.0.19041.0\win10-x64\LifeEpitaph.App.exe
+```
+
+3. 或用 Visual Studio 打开 `LifeEpitaph.sln`，启动项目 `LifeEpitaph.App`，选 **Windows Machine** / Android。
 4. 应用启动即匿名会话，无登录墙；API 不可达时回退本地设备会话 + 本地题库。
+
+完整预览方案与 Agent skill：[`docs/windows-local-preview-plan.md`](docs/windows-local-preview-plan.md)、[`.cursor/skills/maui-windows-preview/SKILL.md`](.cursor/skills/maui-windows-preview/SKILL.md)。
 
 **iOS**：请在 macOS + Xcode 上构建；本 Linux 环境无法产出 iOS 包。
 
