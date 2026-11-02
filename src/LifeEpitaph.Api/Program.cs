@@ -86,11 +86,20 @@ app.MapGet("/tombstone/me", (HttpRequest http, InMemoryAppStore store) =>
     return tombstone is null ? Results.NotFound() : Results.Ok(tombstone);
 });
 
-app.MapGet("/plaza", () => Results.Ok(InMemoryAppStore.MockPlazaCards()));
-
-app.MapPost("/plaza/{tombstoneId:guid}/flowers", (Guid tombstoneId) =>
+app.MapPut("/tombstone/me/visibility", (HttpRequest http, PlazaVisibilityRequest body, InMemoryAppStore store) =>
 {
-    var card = InMemoryAppStore.OfferFlower(tombstoneId);
+    if (!TryGetUserId(http, out var userId))
+        return Results.Unauthorized();
+
+    var tombstone = store.SetListedPublic(userId, body.IsListedPublic);
+    return tombstone is null ? Results.NotFound() : Results.Ok(tombstone);
+});
+
+app.MapGet("/plaza", (InMemoryAppStore store) => Results.Ok(store.ListPlaza()));
+
+app.MapPost("/plaza/{tombstoneId:guid}/flowers", (Guid tombstoneId, InMemoryAppStore store) =>
+{
+    var card = store.OfferFlower(tombstoneId);
     return card is null ? Results.NotFound() : Results.Ok(card);
 });
 

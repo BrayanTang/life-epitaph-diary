@@ -82,6 +82,36 @@ public sealed class InMemoryAppStore
     public TombstoneDto? GetTombstone(Guid userId)
         => _tombstones.TryGetValue(userId, out var t) ? t : null;
 
+    public TombstoneDto? SetListedPublic(Guid userId, bool isListedPublic)
+    {
+        if (!_tombstones.TryGetValue(userId, out var tombstone))
+            return null;
+
+        tombstone.IsListedPublic = isListedPublic;
+        return tombstone;
+    }
+
+    public IReadOnlyList<PlazaCardDto> ListPlaza()
+    {
+        var cards = new List<PlazaCardDto>();
+        foreach (var tombstone in _tombstones.Values.Where(t => t.IsListedPublic))
+        {
+            cards.Add(new PlazaCardDto
+            {
+                TombstoneId = tombstone.Id,
+                DisplayName = tombstone.DisplayName,
+                Epitaph = tombstone.Epitaph,
+                Status = tombstone.Status,
+                SkinId = tombstone.SkinId,
+                FlowerCount = tombstone.FlowerCount,
+                RecentChapterTitles = ["（你的近章会在这里）"],
+            });
+        }
+
+        cards.AddRange(PlazaCards);
+        return cards;
+    }
+
     private static readonly List<PlazaCardDto> PlazaCards =
     [
         new PlazaCardDto
@@ -116,10 +146,23 @@ public sealed class InMemoryAppStore
         },
     ];
 
-    public static IReadOnlyList<PlazaCardDto> MockPlazaCards() => PlazaCards;
-
-    public static PlazaCardDto? OfferFlower(Guid tombstoneId)
+    public PlazaCardDto? OfferFlower(Guid tombstoneId)
     {
+        foreach (var mine in _tombstones.Values.Where(t => t.Id == tombstoneId))
+        {
+            mine.FlowerCount += 1;
+            return new PlazaCardDto
+            {
+                TombstoneId = mine.Id,
+                DisplayName = mine.DisplayName,
+                Epitaph = mine.Epitaph,
+                Status = mine.Status,
+                SkinId = mine.SkinId,
+                FlowerCount = mine.FlowerCount,
+                RecentChapterTitles = ["（你的近章会在这里）"],
+            };
+        }
+
         var card = PlazaCards.FirstOrDefault(c => c.TombstoneId == tombstoneId);
         if (card is null)
             return null;

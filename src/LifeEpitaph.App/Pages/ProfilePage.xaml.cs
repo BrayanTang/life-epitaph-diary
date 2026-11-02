@@ -7,6 +7,7 @@ public partial class ProfilePage : ContentPage
 {
     private readonly LocalStore _store;
     private readonly AnonymousSessionService _session;
+    private readonly ApiClient _api;
     private bool _suppressToggle;
 
     public ProfilePage()
@@ -14,6 +15,7 @@ public partial class ProfilePage : ContentPage
         InitializeComponent();
         _store = ServiceHelper.GetRequiredService<LocalStore>();
         _session = ServiceHelper.GetRequiredService<AnonymousSessionService>();
+        _api = ServiceHelper.GetRequiredService<ApiClient>();
     }
 
     protected override async void OnAppearing()
@@ -27,6 +29,7 @@ public partial class ProfilePage : ContentPage
         _suppressToggle = true;
         PublicSwitch.IsToggled = tombstone.IsListedPublic != 0;
         _suppressToggle = false;
+        ApplyPublicStatus(tombstone.IsListedPublic != 0);
 
         await ReloadJournalAsync();
     }
@@ -101,7 +104,23 @@ public partial class ProfilePage : ContentPage
         var tombstone = await _store.GetTombstoneAsync();
         tombstone.IsListedPublic = e.Value ? 1 : 0;
         await _store.SaveTombstoneAsync(tombstone);
+
+        PublicStatusLabel.Text = e.Value ? "正在同步到广场…" : "正在从广场撤回…";
+        await _session.EnsureSessionAsync();
+        await _api.SetPlazaVisibilityAsync(e.Value);
+        ApplyPublicStatus(e.Value);
     }
+
+    private void ApplyPublicStatus(bool listed)
+    {
+        PublicStatusLabel.Text = listed
+            ? "当前：已出现在墓碑广场（最上方）"
+            : "当前：仅自己可见";
+        GoPlazaButton.IsVisible = listed;
+    }
+
+    private async void OnGoPlazaClicked(object? sender, EventArgs e)
+        => await Shell.Current.GoToAsync("//plaza");
 
     private static string Short(string value)
         => value.Length <= 12 ? value : $"{value[..6]}…{value[^4..]}";

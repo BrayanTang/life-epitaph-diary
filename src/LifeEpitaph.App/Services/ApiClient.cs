@@ -65,6 +65,15 @@ public sealed class ApiClient
         return card;
     }
 
+    public async Task SetPlazaVisibilityAsync(bool isListedPublic)
+    {
+        await EnsureAuthHeaderAsync();
+        var response = await _http.PutAsJsonAsync(
+            "tombstone/me/visibility",
+            new PlazaVisibilityRequest { IsListedPublic = isListedPublic });
+        response.EnsureSuccessStatusCode();
+    }
+
     private async Task EnsureAuthHeaderAsync()
     {
         var session = _session.Current ?? await _session.EnsureSessionAsync();

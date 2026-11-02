@@ -50,11 +50,23 @@
                 <Label Text="出现在墓碑广场"
                        VerticalOptions="Center"
                        TextColor="{StaticResource SoftInk}" />
-                <Switch x:Name="PublicSwitch" IsToggled="False" Toggled="OnPublicToggled" />
+                <Switch x:Name="PublicSwitch"
+                        IsToggled="False"
+                        OnColor="{StaticResource AccentMoss}"
+                        Toggled="OnPublicToggled" />
             </HorizontalStackLayout>
 
-            <Label Text="默认私密。打开后才会进入广场（M1 仅本地开关）。"
+            <Label x:Name="PublicStatusLabel"
+                   Text="当前：仅自己可见"
+                   FontSize="13"
+                   TextColor="{StaticResource SoftInk}" />
+            <Label Text="打开后，你的墓碑会出现在广场最上方；关掉则撤回。"
                    Style="{StaticResource SoftSubtitle}" />
+            <Button x:Name="GoPlazaButton"
+                    Text="去广场看看"
+                    Style="{StaticResource QuietButton}"
+                    IsVisible="False"
+                    Clicked="OnGoPlazaClicked" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

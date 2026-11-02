@@ -7,11 +7,13 @@ namespace LifeEpitaph.App.Pages;
 public partial class PlazaPage : ContentPage
 {
     private readonly ApiClient _api;
+    private readonly LocalStore _store;
 
     public PlazaPage()
     {
         InitializeComponent();
         _api = ServiceHelper.GetRequiredService<ApiClient>();
+        _store = ServiceHelper.GetRequiredService<LocalStore>();
     }
 
     protected override async void OnAppearing()
@@ -24,22 +26,24 @@ public partial class PlazaPage : ContentPage
     {
         PlazaList.Children.Clear();
 
-        var cards = await _api.GetPlazaAsync();
-        if (cards.Count == 0)
+        var cards = (await _api.GetPlazaAsync()).ToList();
+        var mine = await _store.GetTombstoneAsync();
+        if (mine.IsListedPublic != 0)
         {
-            cards =
-            [
-                new PlazaCardDto
-                {
-                    TombstoneId = Guid.Parse("11111111-1111-4111-8111-111111111111"),
-                    DisplayName = "雾里的猫",
-                    Epitaph = "路过人间，轻轻放下一束花。",
-                    Status = "发呆",
-                    SkinId = "moss-kitty",
-                    FlowerCount = 12,
-                    RecentChapterTitles = ["雨停的那一晚", "把钥匙放在口袋里"],
-                },
-            ];
+            _ = Guid.TryParse(mine.Id, out var mineId);
+            cards.RemoveAll(c => c.TombstoneId == mineId
+                || (c.DisplayName == mine.DisplayName && c.Epitaph == mine.Epitaph));
+            var titles = (await _store.ListChaptersAsync()).Take(2).Select(c => c.Title).ToList();
+            cards.Insert(0, new PlazaCardDto
+            {
+                TombstoneId = mineId == Guid.Empty ? Guid.NewGuid() : mineId,
+                DisplayName = mine.DisplayName,
+                Epitaph = mine.Epitaph,
+                Status = mine.Status,
+                SkinId = mine.SkinId,
+                FlowerCount = 0,
+                RecentChapterTitles = titles,
+            });
         }
 
         foreach (var card in cards)
