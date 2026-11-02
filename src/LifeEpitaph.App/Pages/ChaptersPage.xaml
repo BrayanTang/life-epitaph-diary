@@ -8,9 +8,29 @@
     <ScrollView>
         <VerticalStackLayout Padding="28,36" Spacing="16">
             <Label Text="人生剧情" Style="{StaticResource BrandTitle}" />
-            <Label Text="点开一章读完整故事，再用输入框把它写得更丰盛"
+            <Label Text="短答会织成一章故事。打开可读可丰富；点分享即可到广场。"
                    Style="{StaticResource SoftSubtitle}" />
-            <VerticalStackLayout x:Name="ChapterList" Spacing="14" Margin="0,8,0,0" />
+
+            <Border StrokeThickness="0"
+                    BackgroundColor="{StaticResource EditorSurface}"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="16">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="本周剧情" Style="{StaticResource SectionLabel}" />
+                    <Label Text="用本周的今日提问短答，织成一章唐吉诃德式小故事。"
+                           Style="{StaticResource SoftSubtitle}" />
+                    <Button x:Name="GenerateButton"
+                            Text="织成本周剧情"
+                            Style="{StaticResource QuietButton}"
+                            Clicked="OnGenerateClicked" />
+                    <Label x:Name="GenerateHintLabel"
+                           Text=""
+                           FontSize="12"
+                           TextColor="{StaticResource MutedInk}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <VerticalStackLayout x:Name="ChapterList" Spacing="14" Margin="0,4,0,0" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

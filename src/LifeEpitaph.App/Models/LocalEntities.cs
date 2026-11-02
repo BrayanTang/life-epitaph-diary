@@ -69,3 +69,18 @@ public sealed class LocalSession
     public string UserId { get; set; } = string.Empty;
     public string AccessToken { get; set; } = string.Empty;
 }
+
+/// <summary>A journal scrap or chapter the user shared to plaza.</summary>
+public sealed class LocalPlazaPost
+{
+    [PrimaryKey]
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+
+    /// <summary>journal | chapter</summary>
+    public string Kind { get; set; } = "journal";
+    public string SourceId { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Body { get; set; } = string.Empty;
+    public int FlowerCount { get; set; }
+    public string CreatedAt { get; set; } = string.Empty;
+}

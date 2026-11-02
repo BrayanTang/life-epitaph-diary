@@ -36,17 +36,19 @@ public sealed class AnonymousSessionService
         LocalSession session;
         try
         {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
             var response = await _http.PostAsJsonAsync(
                 "auth/anonymous",
                 new AnonymousSessionRequest
                 {
                     DeviceId = deviceId,
                     Platform = DeviceInfo.Current.Platform.ToString(),
-                });
+                },
+                cts.Token);
 
             if (response.IsSuccessStatusCode)
             {
-                var payload = await response.Content.ReadFromJsonAsync<AnonymousSessionResponse>(JsonOptions)
+                var payload = await response.Content.ReadFromJsonAsync<AnonymousSessionResponse>(JsonOptions, cts.Token)
                               ?? throw new InvalidOperationException("Empty anonymous session response.");
 
                 session = new LocalSession

@@ -10,19 +10,19 @@
 
     <TabBar>
         <ShellContent
-            Title="墓碑主页"
+            Title="主页"
             Route="home"
             ContentTemplate="{DataTemplate pages:TombstoneHomePage}" />
         <ShellContent
-            Title="今日提问"
+            Title="今日"
             Route="daily"
             ContentTemplate="{DataTemplate pages:DailyPromptPage}" />
         <ShellContent
-            Title="人生剧情"
+            Title="剧情"
             Route="chapters"
             ContentTemplate="{DataTemplate pages:ChaptersPage}" />
         <ShellContent
-            Title="墓碑广场"
+            Title="广场"
             Route="plaza"
             ContentTemplate="{DataTemplate pages:PlazaPage}" />
         <ShellContent

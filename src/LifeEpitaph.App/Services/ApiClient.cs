@@ -21,7 +21,8 @@ public sealed class ApiClient
     {
         try
         {
-            return await _http.GetFromJsonAsync<DailyPromptDto>("prompts/today?locale=zh-CN", JsonOptions);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            return await _http.GetFromJsonAsync<DailyPromptDto>("prompts/today?locale=zh-CN", JsonOptions, cts.Token);
         }
         catch
         {
@@ -33,7 +34,8 @@ public sealed class ApiClient
     {
         try
         {
-            var cards = await _http.GetFromJsonAsync<List<PlazaCardDto>>("plaza", JsonOptions);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            var cards = await _http.GetFromJsonAsync<List<PlazaCardDto>>("plaza", JsonOptions, cts.Token);
             return cards ?? [];
         }
         catch
@@ -46,29 +48,62 @@ public sealed class ApiClient
     {
         try
         {
-            await EnsureAuthHeaderAsync();
-            await _http.PutAsJsonAsync("answers", request);
+            using var requestMessage = await CreateAuthorizedAsync(HttpMethod.Put, "answers");
+            requestMessage.Content = JsonContent.Create(request);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            await _http.SendAsync(requestMessage, cts.Token);
         }
         catch
         {
-            // Local autosave already persisted; remote sync is best-effort in M1.
         }
     }
 
     public async Task<PlazaCardDto> OfferFlowerAsync(Guid tombstoneId)
     {
-        var response = await _http.PostAsync($"plaza/{tombstoneId:D}/flowers", content: null);
+        using var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"plaza/{tombstoneId:D}/flowers");
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        var response = await _http.SendAsync(requestMessage, cts.Token);
         response.EnsureSuccessStatusCode();
-        var card = await response.Content.ReadFromJsonAsync<PlazaCardDto>(JsonOptions);
+        var card = await response.Content.ReadFromJsonAsync<PlazaCardDto>(JsonOptions, cts.Token);
         if (card is null)
             throw new InvalidOperationException("献花响应为空");
         return card;
     }
 
-    private async Task EnsureAuthHeaderAsync()
+    public async Task SetPlazaVisibilityAsync(bool isListedPublic, PlazaCardDto? card = null)
+    {
+        using var requestMessage = await CreateAuthorizedAsync(HttpMethod.Put, "tombstone/me/visibility");
+        requestMessage.Content = JsonContent.Create(new PlazaVisibilityRequest
+        {
+            IsListedPublic = isListedPublic,
+            Card = card,
+        });
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        var response = await _http.SendAsync(requestMessage, cts.Token);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<ChapterDto?> GenerateChapterAsync()
+    {
+        try
+        {
+            using var requestMessage = await CreateAuthorizedAsync(HttpMethod.Post, "chapters/generate");
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var response = await _http.SendAsync(requestMessage, cts.Token);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<ChapterDto>(JsonOptions, cts.Token);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<HttpRequestMessage> CreateAuthorizedAsync(HttpMethod method, string url)
     {
         var session = _session.Current ?? await _session.EnsureSessionAsync();
-        _http.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", session.AccessToken);
+        var request = new HttpRequestMessage(method, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", session.AccessToken);
+        return request;
     }
 }

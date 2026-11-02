@@ -6,10 +6,10 @@
              BackgroundColor="{StaticResource PageBackground}">
 
     <ScrollView>
-        <VerticalStackLayout Padding="28,36" Spacing="20">
+        <VerticalStackLayout Padding="28,36" Spacing="18">
 
             <Label Text="今日提问" Style="{StaticResource BrandTitle}" />
-            <Label Text="短答即可，离开时会自动保存"
+            <Label Text="短答即可，离开会自动保存。积几句后，去「剧情」织成本周故事。"
                    Style="{StaticResource SoftSubtitle}" />
 
             <Border StrokeThickness="0"
@@ -19,12 +19,12 @@
                 <Label x:Name="PromptLabel"
                        Text="加载中…"
                        FontSize="18"
-                       LineHeight="1.35"
+                       LineHeight="1.4"
                        TextColor="{StaticResource SoftInk}" />
             </Border>
 
             <Editor x:Name="AnswerEditor"
-                    Placeholder="写一点就好…"
+                    Placeholder="写一句就好，像留给骑士的密信…"
                     AutoSize="TextChanges"
                     MinimumHeightRequest="140"
                     BackgroundColor="{StaticResource EditorSurface}"
@@ -37,8 +37,10 @@
                    FontSize="12"
                    TextColor="{StaticResource MutedInk}" />
 
-            <Label Text="本周碎片" Style="{StaticResource SectionLabel}" Margin="0,12,0,0" />
-            <VerticalStackLayout x:Name="WeekFragments" Spacing="8" />
+            <Label Text="本周碎片" Style="{StaticResource SectionLabel}" Margin="0,8,0,0" />
+            <Label Text="这些短答，会慢慢叠成一章故事。"
+                   Style="{StaticResource SoftSubtitle}" />
+            <VerticalStackLayout x:Name="WeekFragments" Spacing="10" />
 
         </VerticalStackLayout>
     </ScrollView>

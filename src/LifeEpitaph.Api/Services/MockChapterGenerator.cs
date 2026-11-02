@@ -3,6 +3,9 @@ using LifeEpitaph.Shared.Models;
 
 namespace LifeEpitaph.Api.Services;
 
+/// <summary>
+/// Mock weekly chapter: turns short scraps into a gentle Quixote-style vignette.
+/// </summary>
 public sealed class MockChapterGenerator : IChapterGenerator
 {
     public Task<ChapterDto> GenerateAsync(
@@ -11,24 +14,19 @@ public sealed class MockChapterGenerator : IChapterGenerator
         IReadOnlyList<AnswerDto> answers,
         CancellationToken cancellationToken = default)
     {
-        var snippets = answers
+        var scraps = answers
             .Where(a => !string.IsNullOrWhiteSpace(a.Body))
-            .Select(a => a.Body.Trim())
-            .Take(5)
+            .Select(a => a.Body)
             .ToList();
 
-        var body = snippets.Count == 0
-            ? "这一周很安静。碎片还在路上，故事会慢慢长出来。"
-            : "这一周，你留下了这些轻轻的痕迹：\n\n"
-              + string.Join("\n", snippets.Select((s, i) => $"{i + 1}. {s}"))
-              + "\n\n（Mock 章节 · 接入真实模型后将改写为连贯剧情）";
+        var (title, body) = QuixoteChapterComposer.Compose(weekStart, scraps);
 
         var chapter = new ChapterDto
         {
             Id = Guid.NewGuid(),
             UserId = userId,
             WeekStart = weekStart,
-            Title = $"第 {weekStart:yyyy-MM-dd} 周 · 安静的碎片",
+            Title = title,
             Body = body,
             SourceAnswerIds = answers.Select(a => a.Id).ToList(),
             GeneratedAt = DateTimeOffset.UtcNow,

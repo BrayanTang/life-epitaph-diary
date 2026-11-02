@@ -1,0 +1,7 @@
+namespace LifeEpitaph.Shared.Models;
+
+public sealed class PlazaVisibilityRequest
+{
+    public bool IsListedPublic { get; set; }
+    public PlazaCardDto? Card { get; set; }
+}

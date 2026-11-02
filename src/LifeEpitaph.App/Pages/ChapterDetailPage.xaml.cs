@@ -7,6 +7,7 @@ namespace LifeEpitaph.App.Pages;
 public partial class ChapterDetailPage : ContentPage
 {
     private readonly LocalStore _store;
+    private readonly ApiClient _api;
     private string _chapterId = string.Empty;
     private LocalChapter? _chapter;
     private CancellationTokenSource? _saveCts;
@@ -25,6 +26,7 @@ public partial class ChapterDetailPage : ContentPage
     {
         InitializeComponent();
         _store = ServiceHelper.GetRequiredService<LocalStore>();
+        _api = ServiceHelper.GetRequiredService<ApiClient>();
     }
 
     private async Task LoadAsync()
@@ -38,16 +40,27 @@ public partial class ChapterDetailPage : ContentPage
             TitleLabel.Text = "找不到这一章";
             StoryLabel.Text = string.Empty;
             EnrichEditor.IsEnabled = false;
+            ShareButton.IsEnabled = false;
             return;
         }
 
         TitleLabel.Text = _chapter.Title;
         MetaLabel.Text = $"{_chapter.WeekStart} · {_chapter.Status}";
         StoryLabel.Text = _chapter.Body;
-        EnrichEditor.Text = await _store.GetChapterEnrichmentAsync(_chapter.Id) ?? string.Empty;
-        SaveHintLabel.Text = string.IsNullOrWhiteSpace(EnrichEditor.Text)
-            ? "写下补充后会自动保存"
+        var enrich = await _store.GetChapterEnrichmentAsync(_chapter.Id) ?? string.Empty;
+        EnrichEditor.Text = enrich;
+        ApplyEnrichPreview(enrich);
+        SaveHintLabel.Text = string.IsNullOrWhiteSpace(enrich)
+            ? "写下补充后会自动保存，并出现在故事下方"
             : "已保存的丰富笔迹";
+    }
+
+    private void ApplyEnrichPreview(string enrich)
+    {
+        var has = !string.IsNullOrWhiteSpace(enrich);
+        EnrichDivider.IsVisible = has;
+        EnrichPreviewLabel.IsVisible = has;
+        EnrichPreviewLabel.Text = has ? $"你添的一笔\n{enrich.Trim()}" : string.Empty;
     }
 
     private void OnEnrichChanged(object? sender, TextChangedEventArgs e)
@@ -66,7 +79,9 @@ public partial class ChapterDetailPage : ContentPage
             if (_chapter is null)
                 return;
 
-            await _store.SaveChapterEnrichmentAsync(_chapter.Id, EnrichEditor.Text ?? string.Empty);
+            var text = EnrichEditor.Text ?? string.Empty;
+            await _store.SaveChapterEnrichmentAsync(_chapter.Id, text);
+            ApplyEnrichPreview(text);
             SaveHintLabel.Text = $"已保存 · {DateTime.Now:HH:mm:ss}";
         }
         catch (TaskCanceledException)
@@ -74,8 +89,18 @@ public partial class ChapterDetailPage : ContentPage
         }
     }
 
-    private async void OnBackClicked(object? sender, EventArgs e)
+    private async void OnShareClicked(object? sender, EventArgs e)
     {
-        await Shell.Current.GoToAsync("..");
+        if (_chapter is null)
+            return;
+
+        ShareButton.IsEnabled = false;
+        var post = await _store.ShareChapterToPlazaAsync(_chapter);
+        var card = await _store.ToPlazaCardAsync(post);
+        try { await _api.SetPlazaVisibilityAsync(true, card); } catch { }
+        ShareButton.Text = "已分享到广场";
     }
+
+    private async void OnBackClicked(object? sender, EventArgs e)
+        => await Shell.Current.GoToAsync("..");
 }
