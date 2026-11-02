@@ -6,6 +6,7 @@ public partial class TombstoneHomePage : ContentPage
 {
     private readonly LocalStore _store;
     private readonly ApiClient _api;
+    private string _pendingSkinId = "soft-stone";
 
     public TombstoneHomePage()
     {
@@ -18,17 +19,20 @@ public partial class TombstoneHomePage : ContentPage
     {
         base.OnAppearing();
         var tombstone = await _store.GetTombstoneAsync();
+        _pendingSkinId = tombstone.SkinId;
         BindTombstone(tombstone);
 
         var needsSetup = tombstone.DisplayName == "无名之石"
             || tombstone.Epitaph == "在这里，安静地记下一周的自己。";
         SetupPanel.IsVisible = needsSetup;
-        if (needsSetup)
-        {
-            NameEntry.Text = tombstone.DisplayName;
-            EpitaphEntry.Text = tombstone.Epitaph;
-            StatusEntry.Text = tombstone.Status;
-        }
+        EditTombstoneButton.IsVisible = !needsSetup;
+        if (needsSetup || SetupPanel.IsVisible)
+            FillSetupFields(tombstone);
+
+        var flowers = await _store.SumMyFlowerCountAsync();
+        MetaLabel.Text = flowers > 0
+            ? $"皮肤 · {SkinDisplay(tombstone.SkinId)} · 广场献花 {flowers}"
+            : $"皮肤 · {SkinDisplay(tombstone.SkinId)}";
 
         var prompt = await _api.GetTodayPromptAsync() ?? MockPromptFallback.ForToday();
         TodayPromptLabel.Text = prompt.Text;
@@ -39,7 +43,7 @@ public partial class TombstoneHomePage : ContentPage
         {
             ChaptersPreview.Children.Add(new Label
             {
-                Text = "还没有章节。答几天今日提问，故事会自己长出来。",
+                Text = "还没有章节。答几天今日提问，再去「剧情」织成本周故事。",
                 TextColor = (Color)Application.Current!.Resources["MutedInk"],
                 FontSize = 14,
             });
@@ -85,12 +89,34 @@ public partial class TombstoneHomePage : ContentPage
         }
     }
 
+    private void FillSetupFields(Models.LocalTombstone tombstone)
+    {
+        NameEntry.Text = tombstone.DisplayName;
+        EpitaphEntry.Text = tombstone.Epitaph;
+        StatusEntry.Text = tombstone.Status;
+        _pendingSkinId = tombstone.SkinId;
+        StyleSkinButtons();
+    }
+
     private void BindTombstone(Models.LocalTombstone tombstone)
     {
         DisplayNameLabel.Text = tombstone.DisplayName;
         StatusLabel.Text = $"此刻 · {tombstone.Status}";
         EpitaphLabel.Text = $"「{tombstone.Epitaph}」";
-        SkinLabel.Text = $"皮肤 · {SkinDisplay(tombstone.SkinId)}";
+        SkinGlyphLabel.Text = SkinGlyph(tombstone.SkinId);
+    }
+
+    private void OnEditTombstoneClicked(object? sender, EventArgs e)
+    {
+        SetupPanel.IsVisible = true;
+        EditTombstoneButton.IsVisible = false;
+        _ = FillFromStoreAsync();
+    }
+
+    private async Task FillFromStoreAsync()
+    {
+        var tombstone = await _store.GetTombstoneAsync();
+        FillSetupFields(tombstone);
     }
 
     private async void OnSaveSetupClicked(object? sender, EventArgs e)
@@ -105,9 +131,61 @@ public partial class TombstoneHomePage : ContentPage
             tombstone.Epitaph = epitaph;
         if (!string.IsNullOrWhiteSpace(status))
             tombstone.Status = status;
+        tombstone.SkinId = _pendingSkinId;
         await _store.SaveTombstoneAsync(tombstone);
         BindTombstone(tombstone);
+        var flowers = await _store.SumMyFlowerCountAsync();
+        MetaLabel.Text = flowers > 0
+            ? $"皮肤 · {SkinDisplay(tombstone.SkinId)} · 广场献花 {flowers}"
+            : $"皮肤 · {SkinDisplay(tombstone.SkinId)}";
         SetupPanel.IsVisible = false;
+        EditTombstoneButton.IsVisible = true;
+    }
+
+    private void OnSkinSoftClicked(object? sender, EventArgs e)
+    {
+        _pendingSkinId = "soft-stone";
+        StyleSkinButtons();
+    }
+
+    private void OnSkinMossClicked(object? sender, EventArgs e)
+    {
+        _pendingSkinId = "moss-kitty";
+        StyleSkinButtons();
+    }
+
+    private void OnSkinLanternClicked(object? sender, EventArgs e)
+    {
+        _pendingSkinId = "lantern-night";
+        StyleSkinButtons();
+    }
+
+    private void StyleSkinButtons()
+    {
+        var quiet = (Style)Application.Current!.Resources["QuietButton"];
+        var moss = (Color)Application.Current.Resources["AccentMoss"];
+        var stone = (Color)Application.Current.Resources["StoneSurface"];
+        var soft = (Color)Application.Current.Resources["SoftInk"];
+
+        void StyleOne(Button button, string skinId)
+        {
+            if (_pendingSkinId == skinId)
+            {
+                button.Style = quiet;
+            }
+            else
+            {
+                button.Style = null;
+                button.BackgroundColor = stone;
+                button.TextColor = soft;
+                button.CornerRadius = 12;
+            }
+        }
+
+        StyleOne(SkinSoftButton, "soft-stone");
+        StyleOne(SkinMossButton, "moss-kitty");
+        StyleOne(SkinLanternButton, "lantern-night");
+        _ = moss;
     }
 
     private static string SkinDisplay(string skinId) => skinId switch
@@ -116,6 +194,13 @@ public partial class TombstoneHomePage : ContentPage
         "moss-kitty" => "苔藓猫",
         "lantern-night" => "夜灯",
         _ => skinId,
+    };
+
+    private static string SkinGlyph(string skinId) => skinId switch
+    {
+        "moss-kitty" => "ฅ",
+        "lantern-night" => "✧",
+        _ => "∩",
     };
 
     private async void OnGoDailyPrompt(object? sender, EventArgs e)

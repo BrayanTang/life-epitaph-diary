@@ -18,8 +18,42 @@ public partial class ChaptersPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        await ReloadAsync();
+    }
+
+    private async void OnGenerateClicked(object? sender, EventArgs e)
+    {
+        GenerateButton.IsEnabled = false;
+        GenerateHintLabel.Text = "正在织故事…";
+        try
+        {
+            var local = await _store.GenerateWeekChapterAsync();
+            _ = await _api.GenerateChapterAsync();
+            GenerateHintLabel.Text = $"已织好 · {local.Title}";
+            await ReloadAsync();
+        }
+        finally
+        {
+            GenerateButton.IsEnabled = true;
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
         ChapterList.Children.Clear();
-        foreach (var chapter in await _store.ListChaptersAsync())
+        var chapters = await _store.ListChaptersAsync();
+        if (chapters.Count == 0)
+        {
+            ChapterList.Children.Add(new Label
+            {
+                Text = "还没有章节。先去答几句今日提问，再点上面的「织成本周剧情」。",
+                FontSize = 14,
+                TextColor = (Color)Application.Current!.Resources["MutedInk"],
+            });
+            return;
+        }
+
+        foreach (var chapter in chapters)
         {
             var preview = chapter.Body.Length <= 48
                 ? chapter.Body

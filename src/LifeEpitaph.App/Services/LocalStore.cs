@@ -1,4 +1,5 @@
 using LifeEpitaph.App.Models;
+using LifeEpitaph.Shared.Ai;
 using LifeEpitaph.Shared.Models;
 using SQLite;
 
@@ -124,6 +125,64 @@ public sealed class LocalStore
         return await _db.Table<LocalChapter>().Where(c => c.Id == id).FirstOrDefaultAsync();
     }
 
+    public async Task UpsertChapterAsync(LocalChapter chapter)
+    {
+        await EnsureInitializedAsync();
+        var existing = await _db.Table<LocalChapter>().Where(c => c.Id == chapter.Id).FirstOrDefaultAsync();
+        if (existing is null)
+            await _db.InsertAsync(chapter);
+        else
+        {
+            existing.Title = chapter.Title;
+            existing.Body = chapter.Body;
+            existing.WeekStart = chapter.WeekStart;
+            existing.Status = chapter.Status;
+            await _db.UpdateAsync(existing);
+        }
+    }
+
+    /// <summary>Weave this week's local scraps into a Quixote-style chapter (idempotent per week).</summary>
+    public async Task<LocalChapter> GenerateWeekChapterAsync()
+    {
+        await EnsureInitializedAsync();
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var weekStart = today.AddDays(-(int)today.DayOfWeek);
+        var weekEnd = weekStart.AddDays(7);
+        var weekKey = weekStart.ToString("yyyy-MM-dd");
+
+        var answers = await ListRecentAnswersAsync(14);
+        var scraps = answers
+            .Where(a =>
+            {
+                if (!DateOnly.TryParse(a.AnsweredOn, out var day))
+                    return false;
+                return day >= weekStart && day < weekEnd && !string.IsNullOrWhiteSpace(a.Body);
+            })
+            .OrderBy(a => a.AnsweredOn)
+            .Select(a => a.Body)
+            .ToList();
+
+        var (title, body) = QuixoteChapterComposer.Compose(weekStart, scraps);
+        var id = $"week-{weekKey}";
+        var chapter = new LocalChapter
+        {
+            Id = id,
+            WeekStart = weekKey,
+            Title = title,
+            Body = body,
+            Status = "ready",
+        };
+        await UpsertChapterAsync(chapter);
+        return chapter;
+    }
+
+    public async Task<int> SumMyFlowerCountAsync()
+    {
+        await EnsureInitializedAsync();
+        var posts = await _db.Table<LocalPlazaPost>().ToListAsync();
+        return posts.Sum(p => p.FlowerCount);
+    }
+
     public async Task<string?> GetChapterEnrichmentAsync(string chapterId)
     {
         await EnsureInitializedAsync();
@@ -180,7 +239,7 @@ public sealed class LocalStore
         {
             Kind = "journal",
             SourceId = entry.Id,
-            Title = "一条自由日志",
+            Title = JournalTitle(entry.Body),
             Body = entry.Body,
             FlowerCount = 0,
             CreatedAt = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm"),
@@ -198,12 +257,17 @@ public sealed class LocalStore
         if (existing is not null)
             return existing;
 
+        var enrich = await GetChapterEnrichmentAsync(chapter.Id);
+        var body = chapter.Body;
+        if (!string.IsNullOrWhiteSpace(enrich))
+            body = $"{chapter.Body}\n\n——\n你添的一笔\n{enrich.Trim()}";
+
         var post = new LocalPlazaPost
         {
             Kind = "chapter",
             SourceId = chapter.Id,
             Title = chapter.Title,
-            Body = chapter.Body,
+            Body = body,
             FlowerCount = 0,
             CreatedAt = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm"),
         };
@@ -293,5 +357,13 @@ public sealed class LocalStore
 
         if (await _db.Table<LocalChapter>().CountAsync() == 0)
             await _db.InsertAllAsync(demos);
+    }
+
+    private static string JournalTitle(string body)
+    {
+        var line = body.Trim().Replace('\n', ' ');
+        if (line.Length == 0)
+            return "一条自由日志";
+        return line.Length <= 16 ? line : line[..16] + "…";
     }
 }

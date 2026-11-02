@@ -44,14 +44,14 @@ public partial class PlazaPage : ContentPage
             MineTabButton.Style = (Style)Application.Current!.Resources["QuietButton"];
             AllTabButton.BackgroundColor = Colors.Transparent;
             AllTabButton.TextColor = (Color)Application.Current.Resources["AccentMoss"];
-            SectionHint.Text = "我分享出去的内容，以及收到的献花数";
+            SectionHint.Text = "你分享出去的内容，以及收到的献花";
         }
         else
         {
             AllTabButton.Style = (Style)Application.Current!.Resources["QuietButton"];
             MineTabButton.BackgroundColor = Colors.Transparent;
             MineTabButton.TextColor = (Color)Application.Current.Resources["AccentMoss"];
-            SectionHint.Text = "广场动态";
+            SectionHint.Text = "路过别人的石头，献一束花就好";
         }
     }
 
@@ -67,7 +67,7 @@ public partial class PlazaPage : ContentPage
             {
                 PlazaList.Children.Add(new Label
                 {
-                    Text = "还没有分享。去「我的」选一条日志，或去「人生剧情」分享一章。",
+                    Text = "还没有分享。去「我的」写日志，或去「剧情」分享一章。",
                     FontSize = 14,
                     TextColor = (Color)Application.Current!.Resources["MutedInk"],
                 });
@@ -94,7 +94,7 @@ public partial class PlazaPage : ContentPage
         {
             PlazaList.Children.Add(new Label
             {
-                Text = "广场还空着。",
+                Text = "广场还空着。先分享一条日志或一章剧情，它会出现在这里。",
                 FontSize = 14,
                 TextColor = (Color)Application.Current!.Resources["MutedInk"],
             });

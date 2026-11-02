@@ -8,7 +8,7 @@
     <ScrollView>
         <VerticalStackLayout Padding="28,36" Spacing="16">
             <Label Text="墓碑广场" Style="{StaticResource BrandTitle}" />
-            <Label Text="匿名分享的日志与剧情 · 只能献花 · 没有评论"
+            <Label Text="匿名的日志与剧情。只能献花，没有评论，也不必回。"
                    Style="{StaticResource SoftSubtitle}" />
 
             <HorizontalStackLayout Spacing="12">

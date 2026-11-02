@@ -9,6 +9,7 @@ public partial class ProfilePage : ContentPage
     private readonly LocalStore _store;
     private readonly AnonymousSessionService _session;
     private readonly ApiClient _api;
+    private bool _suppressToggle;
 
     public ProfilePage()
     {
@@ -24,7 +25,30 @@ public partial class ProfilePage : ContentPage
         var session = _session.Current ?? await _session.EnsureSessionAsync();
         DeviceIdLabel.Text = $"设备  {Short(session.DeviceId)}";
         UserIdLabel.Text = $"用户  {Short(session.UserId)}";
+
+        var tombstone = await _store.GetTombstoneAsync();
+        _suppressToggle = true;
+        PublicSwitch.IsToggled = tombstone.IsListedPublic == 1;
+        _suppressToggle = false;
+        PrivacyHintLabel.Text = PublicSwitch.IsToggled
+            ? "开启：分享出去的内容会出现在广场。"
+            : "关闭：内容仍可点分享，但不会主动推到广场流。";
+
         await ReloadJournalAsync();
+    }
+
+    private async void OnPublicToggled(object? sender, ToggledEventArgs e)
+    {
+        if (_suppressToggle)
+            return;
+
+        var tombstone = await _store.GetTombstoneAsync();
+        tombstone.IsListedPublic = e.Value ? 1 : 0;
+        await _store.SaveTombstoneAsync(tombstone);
+        PrivacyHintLabel.Text = e.Value
+            ? "开启：分享出去的内容会出现在广场。"
+            : "关闭：内容仍可点分享，但不会主动推到广场流。";
+        try { await _api.SetPlazaVisibilityAsync(e.Value); } catch { }
     }
 
     private async void OnSaveJournalClicked(object? sender, EventArgs e)
@@ -75,7 +99,7 @@ public partial class ProfilePage : ContentPage
                 var card = await _store.ToPlazaCardAsync(post);
                 try { await _api.SetPlazaVisibilityAsync(true, card); } catch { }
                 shareButton.Text = "已分享";
-                JournalHintLabel.Text = "已分享到广场，去「墓碑广场 → 我的」可看献花数";
+                JournalHintLabel.Text = "已分享到广场，去「广场 → 我的」可看献花";
             };
 
             JournalList.Children.Add(new Border

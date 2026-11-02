@@ -26,7 +26,8 @@
                              HorizontalOptions="Center"
                              CornerRadius="3"
                              Opacity="0.55" />
-                    <Label Text="∩"
+                    <Label x:Name="SkinGlyphLabel"
+                           Text="∩"
                            FontSize="28"
                            HorizontalTextAlignment="Center"
                            TextColor="{StaticResource AccentMoss}"
@@ -50,12 +51,19 @@
                            Style="{StaticResource EpitaphText}"
                            HorizontalTextAlignment="Center"
                            Margin="8,0" />
-                    <Label x:Name="SkinLabel"
+                    <Label x:Name="MetaLabel"
                            Text=""
                            FontSize="12"
                            HorizontalTextAlignment="Center"
                            TextColor="{StaticResource MutedInk}"
-                           Opacity="0.85" />
+                           Opacity="0.9" />
+                    <Button x:Name="EditTombstoneButton"
+                            Text="改墓碑"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource AccentMoss}"
+                            FontSize="13"
+                            Padding="0"
+                            Clicked="OnEditTombstoneClicked" />
                 </VerticalStackLayout>
             </Border>
 
@@ -66,9 +74,9 @@
                     StrokeShape="RoundRectangle 16"
                     Padding="18">
                 <VerticalStackLayout Spacing="10">
-                    <Label Text="先立一块自己的石头"
+                    <Label Text="立一块自己的石头"
                            Style="{StaticResource SectionLabel}" />
-                    <Label Text="墓名、墓志铭、此刻状态——都可以改，只有你自己先看见。"
+                    <Label Text="墓名、墓志铭、此刻状态、皮肤——都可以改，只有你自己先看见。"
                            Style="{StaticResource SoftSubtitle}" />
                     <Entry x:Name="NameEntry"
                            Placeholder="墓名，比如：南风石"
@@ -82,6 +90,24 @@
                            Placeholder="状态，比如：安静 / 发呆 / 想说话"
                            TextColor="{StaticResource SoftInk}"
                            PlaceholderColor="{StaticResource MutedInk}" />
+                    <Label Text="皮肤" Style="{StaticResource SoftSubtitle}" />
+                    <HorizontalStackLayout Spacing="8">
+                        <Button x:Name="SkinSoftButton"
+                                Text="软石头"
+                                FontSize="13"
+                                Padding="12,8"
+                                Clicked="OnSkinSoftClicked" />
+                        <Button x:Name="SkinMossButton"
+                                Text="苔藓猫"
+                                FontSize="13"
+                                Padding="12,8"
+                                Clicked="OnSkinMossClicked" />
+                        <Button x:Name="SkinLanternButton"
+                                Text="夜灯"
+                                FontSize="13"
+                                Padding="12,8"
+                                Clicked="OnSkinLanternClicked" />
+                    </HorizontalStackLayout>
                     <Button Text="立好了"
                             Style="{StaticResource QuietButton}"
                             Clicked="OnSaveSetupClicked" />

@@ -83,6 +83,22 @@ public sealed class ApiClient
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task<ChapterDto?> GenerateChapterAsync()
+    {
+        try
+        {
+            using var requestMessage = await CreateAuthorizedAsync(HttpMethod.Post, "chapters/generate");
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var response = await _http.SendAsync(requestMessage, cts.Token);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<ChapterDto>(JsonOptions, cts.Token);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private async Task<HttpRequestMessage> CreateAuthorizedAsync(HttpMethod method, string url)
     {
         var session = _session.Current ?? await _session.EnsureSessionAsync();

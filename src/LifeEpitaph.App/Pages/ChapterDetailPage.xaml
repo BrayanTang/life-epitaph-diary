@@ -22,10 +22,21 @@
                     BackgroundColor="{StaticResource StoneSurface}"
                     StrokeShape="RoundRectangle 16"
                     Padding="20">
-                <Label x:Name="StoryLabel"
-                       FontSize="16"
-                       LineHeight="1.5"
-                       TextColor="{StaticResource SoftInk}" />
+                <VerticalStackLayout Spacing="12">
+                    <Label x:Name="StoryLabel"
+                           FontSize="16"
+                           LineHeight="1.5"
+                           TextColor="{StaticResource SoftInk}" />
+                    <BoxView x:Name="EnrichDivider"
+                             HeightRequest="1"
+                             Color="{StaticResource Hairline}"
+                             IsVisible="False" />
+                    <Label x:Name="EnrichPreviewLabel"
+                           FontSize="15"
+                           LineHeight="1.45"
+                           TextColor="{StaticResource SoftInk}"
+                           IsVisible="False" />
+                </VerticalStackLayout>
             </Border>
 
             <Button x:Name="ShareButton"

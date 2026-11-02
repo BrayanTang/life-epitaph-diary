@@ -8,8 +8,31 @@
     <ScrollView>
         <VerticalStackLayout Padding="28,36" Spacing="18">
             <Label Text="我的" Style="{StaticResource BrandTitle}" />
-            <Label Text="私密日志。选一条点「分享到广场」，去广场「我的」看献花。"
+            <Label Text="私密日志默认只有你看见。选一条分享后，去广场「我的」看献花。"
                    Style="{StaticResource SoftSubtitle}" />
+
+            <Border StrokeThickness="0"
+                    BackgroundColor="{StaticResource StoneSurface}"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="隐私" Style="{StaticResource SectionLabel}" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0"
+                               Text="允许出现在广场"
+                               VerticalTextAlignment="Center"
+                               TextColor="{StaticResource SoftInk}" />
+                        <Switch x:Name="PublicSwitch"
+                                Grid.Column="1"
+                                OnColor="{StaticResource AccentMoss}"
+                                Toggled="OnPublicToggled" />
+                    </Grid>
+                    <Label x:Name="PrivacyHintLabel"
+                           Text="关闭后，新分享不会主动推到广场流。"
+                           FontSize="12"
+                           TextColor="{StaticResource MutedInk}" />
+                </VerticalStackLayout>
+            </Border>
 
             <Label Text="自由日志" Style="{StaticResource SectionLabel}" Margin="0,8,0,0" />
             <Editor x:Name="JournalEditor"

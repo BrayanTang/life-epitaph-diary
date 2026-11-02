@@ -9,7 +9,7 @@
         <VerticalStackLayout Padding="28,36" Spacing="18">
 
             <Label Text="今日提问" Style="{StaticResource BrandTitle}" />
-            <Label Text="短答即可。离开页面会自动保存，以后会织进人生剧情。"
+            <Label Text="短答即可，离开会自动保存。积几句后，去「剧情」织成本周故事。"
                    Style="{StaticResource SoftSubtitle}" />
 
             <Border StrokeThickness="0"
