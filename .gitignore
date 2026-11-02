@@ -441,3 +441,9 @@ secrets.json
 *.db
 *.db-shm
 *.db-wal
+
+# local run logs
+*.log
+api-run*.log
+maui-run*.log
+

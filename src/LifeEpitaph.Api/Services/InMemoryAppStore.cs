@@ -82,7 +82,7 @@ public sealed class InMemoryAppStore
     public TombstoneDto? GetTombstone(Guid userId)
         => _tombstones.TryGetValue(userId, out var t) ? t : null;
 
-    public static IReadOnlyList<PlazaCardDto> MockPlazaCards() =>
+    private static readonly List<PlazaCardDto> PlazaCards =
     [
         new PlazaCardDto
         {
@@ -115,4 +115,16 @@ public sealed class InMemoryAppStore
             RecentChapterTitles = ["第三章 · 短答的回声", "窗边的咖啡凉了", "一个人的地铁"],
         },
     ];
+
+    public static IReadOnlyList<PlazaCardDto> MockPlazaCards() => PlazaCards;
+
+    public static PlazaCardDto? OfferFlower(Guid tombstoneId)
+    {
+        var card = PlazaCards.FirstOrDefault(c => c.TombstoneId == tombstoneId);
+        if (card is null)
+            return null;
+
+        card.FlowerCount += 1;
+        return card;
+    }
 }

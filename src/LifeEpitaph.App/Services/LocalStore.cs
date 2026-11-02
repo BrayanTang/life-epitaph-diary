@@ -29,6 +29,7 @@ public sealed class LocalStore
             await _db.CreateTableAsync<LocalTombstone>();
             await _db.CreateTableAsync<LocalAnswer>();
             await _db.CreateTableAsync<LocalChapter>();
+            await _db.CreateTableAsync<LocalChapterEnrichment>();
             await _db.CreateTableAsync<LocalSession>();
 
             var tombstone = await _db.Table<LocalTombstone>().FirstOrDefaultAsync();
@@ -37,26 +38,7 @@ public sealed class LocalStore
                 await _db.InsertAsync(new LocalTombstone());
             }
 
-            if (await _db.Table<LocalChapter>().CountAsync() == 0)
-            {
-                await _db.InsertAllAsync(new[]
-                {
-                    new LocalChapter
-                    {
-                        WeekStart = DateOnly.FromDateTime(DateTime.Today.AddDays(-14)).ToString("yyyy-MM-dd"),
-                        Title = "序章 · 一块安静的石头",
-                        Body = "（占位）建墓之后的第一周，故事还很轻。",
-                        Status = "ready",
-                    },
-                    new LocalChapter
-                    {
-                        WeekStart = DateOnly.FromDateTime(DateTime.Today.AddDays(-7)).ToString("yyyy-MM-dd"),
-                        Title = "短答慢慢叠成线",
-                        Body = "（占位）本周章节将由 Mock / 真实 AI 生成。",
-                        Status = "draft",
-                    },
-                });
-            }
+            await EnsureStoryChaptersAsync();
 
             _initialized = true;
         }
@@ -131,5 +113,78 @@ public sealed class LocalStore
         return await _db.Table<LocalChapter>()
             .OrderByDescending(c => c.WeekStart)
             .ToListAsync();
+    }
+
+    public async Task<LocalChapter?> GetChapterAsync(string id)
+    {
+        await EnsureInitializedAsync();
+        return await _db.Table<LocalChapter>().Where(c => c.Id == id).FirstOrDefaultAsync();
+    }
+
+    public async Task<string?> GetChapterEnrichmentAsync(string chapterId)
+    {
+        await EnsureInitializedAsync();
+        var row = await _db.Table<LocalChapterEnrichment>()
+            .Where(e => e.ChapterId == chapterId)
+            .FirstOrDefaultAsync();
+        return row?.Body;
+    }
+
+    public async Task SaveChapterEnrichmentAsync(string chapterId, string body)
+    {
+        await EnsureInitializedAsync();
+        await _db.InsertOrReplaceAsync(new LocalChapterEnrichment
+        {
+            ChapterId = chapterId,
+            Body = body,
+            UpdatedAt = DateTimeOffset.Now.ToString("O"),
+        });
+    }
+
+    private async Task EnsureStoryChaptersAsync()
+    {
+        var demos = new[]
+        {
+            new LocalChapter
+            {
+                Id = "demo-chapter-prologue",
+                WeekStart = DateOnly.FromDateTime(DateTime.Today.AddDays(-14)).ToString("yyyy-MM-dd"),
+                Title = "序章 · 一块安静的石头",
+                Body =
+                    "那一周几乎没有大事发生。你把钥匙放进口袋，路过同一棵树，买了同一种面包。" +
+                    "可在故事里，口袋是盔甲的暗格，那棵树是边界上的瞭望塔，面包是出征前的干粮。" +
+                    "平凡并不妨碍你成为自己生活的骑士——哪怕对手只是路边的风车。",
+                Status = "ready",
+            },
+            new LocalChapter
+            {
+                Id = "demo-chapter-windmill",
+                WeekStart = DateOnly.FromDateTime(DateTime.Today.AddDays(-7)).ToString("yyyy-MM-dd"),
+                Title = "唐吉诃德大战风车",
+                Body =
+                    "周一的地铁门开合得像巨兽眨眼。你挤进去，被人群轻轻推着前进，心里其实只想早点到公司。" +
+                    "故事却把这一幕写成：你骑着想象中的瘦马，冲向旋转的金属风车——它们轰鸣、闪光，看似强大。" +
+                    "你没有真的打倒它们，但你抬头了。抬头本身，就是一次小小的开战。",
+                Status = "ready",
+            },
+        };
+
+        foreach (var demo in demos)
+        {
+            var existing = await _db.Table<LocalChapter>().Where(c => c.Id == demo.Id).FirstOrDefaultAsync();
+            if (existing is null)
+                await _db.InsertAsync(demo);
+            else
+            {
+                existing.Title = demo.Title;
+                existing.Body = demo.Body;
+                existing.WeekStart = demo.WeekStart;
+                existing.Status = demo.Status;
+                await _db.UpdateAsync(existing);
+            }
+        }
+
+        if (await _db.Table<LocalChapter>().CountAsync() == 0)
+            await _db.InsertAllAsync(demos);
     }
 }

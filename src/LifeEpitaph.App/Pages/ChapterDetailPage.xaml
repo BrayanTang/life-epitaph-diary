@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="LifeEpitaph.App.Pages.ChapterDetailPage"
+             Title="章节故事"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="28,36" Spacing="16">
+
+            <Button Text="← 返回剧情列表"
+                    BackgroundColor="Transparent"
+                    TextColor="{StaticResource AccentMoss}"
+                    HorizontalOptions="Start"
+                    Padding="0"
+                    Clicked="OnBackClicked" />
+
+            <Label x:Name="TitleLabel" Style="{StaticResource BrandTitle}" />
+            <Label x:Name="MetaLabel" Style="{StaticResource SoftSubtitle}" />
+
+            <Border StrokeThickness="0"
+                    BackgroundColor="{StaticResource StoneSurface}"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="20">
+                <Label x:Name="StoryLabel"
+                       FontSize="16"
+                       LineHeight="1.45"
+                       TextColor="{StaticResource SoftInk}" />
+            </Border>
+
+            <Label Text="丰富这段故事"
+                   Style="{StaticResource SectionLabel}"
+                   Margin="0,8,0,0" />
+            <Label Text="把平淡的一天写成一场温柔的冒险——比如通勤路上的风车大战。"
+                   Style="{StaticResource SoftSubtitle}" />
+
+            <Editor x:Name="EnrichEditor"
+                    Placeholder="写下你想添上的一笔…"
+                    AutoSize="TextChanges"
+                    MinimumHeightRequest="140"
+                    BackgroundColor="{StaticResource EditorSurface}"
+                    TextColor="{StaticResource SoftInk}"
+                    PlaceholderColor="{StaticResource MutedInk}"
+                    TextChanged="OnEnrichChanged" />
+
+            <Label x:Name="SaveHintLabel"
+                   Text=""
+                   FontSize="12"
+                   TextColor="{StaticResource MutedInk}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

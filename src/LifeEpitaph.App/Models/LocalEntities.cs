@@ -39,6 +39,16 @@ public sealed class LocalChapter
     public string Status { get; set; } = "draft";
 }
 
+/// <summary>User-written enrichment layered onto a weekly chapter story.</summary>
+public sealed class LocalChapterEnrichment
+{
+    [PrimaryKey]
+    public string ChapterId { get; set; } = string.Empty;
+
+    public string Body { get; set; } = string.Empty;
+    public string UpdatedAt { get; set; } = string.Empty;
+}
+
 public sealed class LocalSession
 {
     [PrimaryKey]

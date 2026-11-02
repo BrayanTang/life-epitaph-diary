@@ -1,4 +1,5 @@
 using LifeEpitaph.App.Services;
+using Microsoft.Maui.Controls.Shapes;
 
 namespace LifeEpitaph.App.Pages;
 
@@ -18,15 +19,33 @@ public partial class ChaptersPage : ContentPage
         ChapterList.Children.Clear();
         foreach (var chapter in await _store.ListChaptersAsync())
         {
-            ChapterList.Children.Add(new Border
+            var preview = chapter.Body.Length <= 48
+                ? chapter.Body
+                : chapter.Body[..48] + "…";
+
+            var chapterId = chapter.Id;
+            var openButton = new Button
+            {
+                Text = "打开故事",
+                Style = (Style)Application.Current!.Resources["QuietButton"],
+                HorizontalOptions = LayoutOptions.Start,
+                Padding = new Thickness(14, 8),
+                FontSize = 13,
+            };
+            openButton.Clicked += async (_, _) =>
+            {
+                await Shell.Current.GoToAsync($"{nameof(ChapterDetailPage)}?id={Uri.EscapeDataString(chapterId)}");
+            };
+
+            var card = new Border
             {
                 StrokeThickness = 0,
-                BackgroundColor = (Color)Application.Current!.Resources["StoneSurface"],
+                BackgroundColor = (Color)Application.Current.Resources["StoneSurface"],
                 StrokeShape = new RoundRectangle { CornerRadius = 14 },
                 Padding = new Thickness(18),
                 Content = new VerticalStackLayout
                 {
-                    Spacing = 6,
+                    Spacing = 8,
                     Children =
                     {
                         new Label
@@ -44,14 +63,16 @@ public partial class ChaptersPage : ContentPage
                         },
                         new Label
                         {
-                            Text = chapter.Body,
+                            Text = preview,
                             FontSize = 14,
                             TextColor = (Color)Application.Current.Resources["SoftInk"],
                             LineBreakMode = LineBreakMode.WordWrap,
                         },
+                        openButton,
                     },
                 },
-            });
+            };
+            ChapterList.Children.Add(card);
         }
     }
 }
