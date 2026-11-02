@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="LifeEpitaph.App.Pages.ProfilePage"
+             Title="我的"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="28,36" Spacing="18">
+            <Label Text="我的" Style="{StaticResource BrandTitle}" />
+            <Label Text="私密空间与基础设置 · M1 占位"
+                   Style="{StaticResource SoftSubtitle}" />
+
+            <Border StrokeThickness="0"
+                    BackgroundColor="{StaticResource StoneSurface}"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="20">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="匿名会话" Style="{StaticResource SectionLabel}" />
+                    <Label x:Name="DeviceIdLabel" FontSize="13" TextColor="{StaticResource MutedInk}" />
+                    <Label x:Name="UserIdLabel" FontSize="13" TextColor="{StaticResource MutedInk}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <HorizontalStackLayout Spacing="12">
+                <Label Text="出现在墓碑广场"
+                       VerticalOptions="Center"
+                       TextColor="{StaticResource SoftInk}" />
+                <Switch x:Name="PublicSwitch" IsToggled="False" Toggled="OnPublicToggled" />
+            </HorizontalStackLayout>
+
+            <Label Text="默认私密。打开后才会进入广场（M1 仅本地开关）。"
+                   Style="{StaticResource SoftSubtitle}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

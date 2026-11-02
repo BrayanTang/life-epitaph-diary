@@ -1,0 +1,6 @@
+@LifeEpitaph.Api_HostAddress = http://localhost:5267
+
+GET {{LifeEpitaph.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

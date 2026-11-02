@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="LifeEpitaph.App.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pages="clr-namespace:LifeEpitaph.App.Pages"
+    Shell.FlyoutBehavior="Disabled"
+    Shell.NavBarIsVisible="False"
+    Title="人生墓碑日记">
+
+    <TabBar>
+        <ShellContent
+            Title="墓碑主页"
+            Route="home"
+            ContentTemplate="{DataTemplate pages:TombstoneHomePage}" />
+        <ShellContent
+            Title="今日提问"
+            Route="daily"
+            ContentTemplate="{DataTemplate pages:DailyPromptPage}" />
+        <ShellContent
+            Title="人生剧情"
+            Route="chapters"
+            ContentTemplate="{DataTemplate pages:ChaptersPage}" />
+        <ShellContent
+            Title="墓碑广场"
+            Route="plaza"
+            ContentTemplate="{DataTemplate pages:PlazaPage}" />
+        <ShellContent
+            Title="我的"
+            Route="profile"
+            ContentTemplate="{DataTemplate pages:ProfilePage}" />
+    </TabBar>
+
+</Shell>
